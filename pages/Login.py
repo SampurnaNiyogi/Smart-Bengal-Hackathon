@@ -6,7 +6,7 @@ import time
 
 # Load Firebase credentials (Use a service account JSON file)
 if not firebase_admin._apps:
-    cred = credentials.Certificate("sbh25-2d8ba-firebase-adminsdk-fbsvc-d4cce1ee41.json")  # Update with your file path
+    cred = credentials.Certificate("C:/Users/Sampurna/SBH1/sbh25-2d8ba-firebase-adminsdk-fbsvc-3326c03dcc.json")  # Update with your file path
     firebase_admin.initialize_app(cred)
 
 # Initialize Firestore
