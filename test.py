@@ -6,7 +6,7 @@ try:
 
     # Check if Firebase is already initialized
     if not firebase_admin._apps:
-        cred = credentials.Certificate("C:/Users/Sampurna/SBH1/sbh25-2d8ba-firebase-adminsdk-fbsvc-3326c03dcc.json")
+        cred = credentials.Certificate("/Users/adityadebnath/Documents/sbh25-2d8ba-firebase-adminsdk-fbsvc-fc8ef9b782.json ")
         firebase_admin.initialize_app(cred)
 
     db = firestore.client()
