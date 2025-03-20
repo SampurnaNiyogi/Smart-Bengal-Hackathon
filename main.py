@@ -15,7 +15,6 @@ status_placeholder.empty()
 if "pages" not in st.session_state:
     st.session_state.page = "False"
 
-st.write("hi")
 
 # Show "Enter Store" button after loading is complete
 if st.button("Enter Store"):
