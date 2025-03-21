@@ -25,7 +25,7 @@ if "user_registered" not in st.session_state:
     st.session_state.user_registered = None
 
 if "page" not in st.session_state:
-    st.session_state.page = "customer_login"
+    st.session_state.page = "login"
 
 def login_page():
     st.title("Login/Sign Up")
