@@ -1,4 +1,4 @@
-import streamlit as st
+\import streamlit as st
 import firebase_admin
 from firebase_admin import credentials, firestore
 import time
@@ -16,7 +16,7 @@ if not service_account_path:
 
 # Initialize Firebase only if not already initialized
 if not firebase_admin._apps:
-    cred = credentials.Certificate(service_account_path)  # Ensure correct path
+    cred = credentials.Certificate(service_account_path)
     firebase_admin.initialize_app(cred)
 
 db = firestore.client()
@@ -32,18 +32,19 @@ def login_page():
     if st.button("Sign In"):
         st.session_state.user_registered = "Existing"
         st.rerun()
-
     elif st.button("Sign Up"):
         st.session_state.user_registered = "New User"
         st.rerun()
-    
-# Add user data to Firestore
-def add_user(name, email):
-    users_ref = db.collection("users")
-    users_ref.add({"name": name, "email": email})  # Store data in Firestore
-    st.session_state.user_registered = True  # Mark registration as complete
-    return
 
+def add_user(name, email):
+    try:
+        users_ref = db.collection("users")
+        users_ref.add({"name": name, "email": email})
+        st.session_state.user_registered = True
+        return True
+    except Exception as e:
+        st.error(f"Error adding user: {e}")
+        return False
 
 def register():
     st.title("Sign Up")
@@ -51,27 +52,28 @@ def register():
     name = st.text_input("Enter Name")
     email = st.text_input("Enter Email")
     if st.button("Sign Up"):
-        add_user(name, email)
-        st.success(f"User {name} added successfully!")
-        st.session_state.page = "consumer_dashboard"
-        st.session_state.user_registered = "Existing"
-        status_placeholder = st.empty()
-        with status_placeholder.status("Loading......"):
-            for i in range(1):
-                time.sleep(1)  # Simulate a step taking time
-
-        status_placeholder.empty()
-        st.rerun()
-        
+        if add_user(name, email):
+            st.success(f"User {name} added successfully!")
+            st.session_state.page = "consumer_dashboard"
+            st.session_state.user_registered = "Existing"
+            status_placeholder = st.empty()
+            with status_placeholder.status("Loading......"):
+                for i in range(1):
+                    time.sleep(1)
+            status_placeholder.empty()
+            st.rerun()
 
 def authenticate():
     st.title("Sign In")
     u_name = st.text_input("Enter Name")
     email = st.text_input("Enter Email")
     if st.button("Sign In"):
-        st.session_state["user_name"] = u_name
-        st.switch_page("pages/Customer_dashboard.py")
-
+        user_ref = db.collection("users").where("name", "==", u_name).where("email", "==", email).get()
+        if user_ref:
+            st.session_state["user_name"] = u_name
+            st.switch_page("pages/Customer_dashboard.py")
+        else:
+            st.error("Incorrect name or email")
 
 if st.session_state.user_registered is None:
     login_page()
