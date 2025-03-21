@@ -5,6 +5,8 @@ from firebase_admin import credentials, firestore
 from dotenv import load_dotenv
 import os
 
+
+
 # Load environment variables from .env
 load_dotenv()
 
@@ -24,18 +26,17 @@ db = firestore.client()
 app = Flask(__name__)
 
 
-# Fetch all products from a specific branch of a provider
-@app.route('/<provider>/<branch>/get_product', methods=['GET'])
-def get_products(provider_name, branch):
-    products_ref = db.collection("provider").document(provider_name).collection(branch)
-    docs = products_ref.stream()
-    products = {doc.id: doc.to_dict() for doc in docs}
-    
-    if products:
-        return jsonify(products)
-    else:
-        return jsonify({"error": "No products found"}), 404
+@app.route('/<provider>/<branch>/<product_name>/get_product', methods=['GET'])
+def get_products(provider, branch, product_name):
+    products_ref = db.collection("provider").document(provider).collection(branch).document(product_name)
+    doc = products_ref.get()
 
+    if doc.exists:
+        return jsonify(doc.to_dict())  # ✅ Convert Firestore document to dictionary
+    else:
+        return jsonify({"error": "No products found"}), 404  # ✅ Ensure error is JSON
+    
+    
 # Fetch product location from a specific branch
 @app.route('/get_location/<provider>/<branch>', methods=['GET'])
 def get_location(provider, branch):
