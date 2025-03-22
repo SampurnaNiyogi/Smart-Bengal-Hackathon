@@ -19,15 +19,12 @@ encoded_product = urllib.parse.quote(product_name)
 response = requests.get(f"{BASE_URL}/{provider}/{encoded_branch}/{encoded_product}/get_product")
 
 
-
- 
 if response.status_code == 200:
     st.write("Product Found")
     product_details = response.json()
     st.write(f"Quantity : {product_details['Quantity']}")
     st.write(f"Loaction : {product_details['Location']}")
 
+
 else:
     st.error("No product found")
-
-
