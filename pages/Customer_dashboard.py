@@ -12,10 +12,7 @@ if "retail" not in st.session_state:
 if "branch" not in st.session_state:
     st.session_state.branch = False
 
-
 st.title(f"Hi {name}! Welcome to Store!")
-
-
 
 response = requests.get(f"{BASE_URL}/get_providers")
 if response.status_code == 200:
@@ -23,15 +20,14 @@ if response.status_code == 200:
 else:
     provider_options = ["Error fetching retail"]
 
-retailer_option = st.selectbox("Select retailer:",provider_options)
+retailer_option = st.selectbox("Select retailer:", provider_options)
 st.session_state.retail = retailer_option
 st.write(f"You selected {retailer_option}")
-
 
 # Fetch branches dynamically based on selected provider
 if retailer_option and retailer_option != "Error fetching providers":
     response_branches = requests.get(f"{BASE_URL}/{retailer_option}/get_branch")
-    
+
     if response_branches.status_code == 200:
         branch_options = response_branches.json()
     else:
