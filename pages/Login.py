@@ -1,5 +1,3 @@
-import re
-
 import streamlit as st
 import firebase_admin
 from firebase_admin import credentials, firestore
@@ -29,7 +27,6 @@ if "user_registered" not in st.session_state:
 if "page" not in st.session_state:
     st.session_state.page = "login"
 
-
 def login_page():
     st.title("Login/Sign Up")
     if st.button("Sign In"):
@@ -39,18 +36,8 @@ def login_page():
         st.session_state.user_registered = "New User"
         st.rerun()
 
-
 def add_user(name, email):
-    # cryptic email regex for validation (microsoft approved)
-    # for better understanding, copypaste this in regexr.com
-    email_regex = re.compile(r"^\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$")
     try:
-        if not name or not email:
-            st.error("Please enter a valid name or email")
-            return False
-        if not email_regex.match(email):
-            st.error("Email address is not valid")
-            return False
         users_ref = db.collection("users")
         users_ref.add({"name": name, "email": email})
         st.session_state.user_registered = True
@@ -58,7 +45,6 @@ def add_user(name, email):
     except Exception as e:
         st.error(f"Error adding user: {e}")
         return False
-
 
 def register():
     st.title("Sign Up")
@@ -77,7 +63,6 @@ def register():
             status_placeholder.empty()
             st.rerun()
 
-
 def authenticate():
     st.title("Sign In")
     u_name = st.text_input("Enter Name")
@@ -89,7 +74,6 @@ def authenticate():
             st.switch_page("pages/Customer_dashboard.py")
         else:
             st.error("Incorrect name or email")
-
 
 if st.session_state.user_registered is None:
     login_page()
