@@ -1,3 +1,5 @@
+import re
+
 import streamlit as st
 import firebase_admin
 from firebase_admin import credentials, firestore
@@ -27,6 +29,7 @@ if "user_registered" not in st.session_state:
 if "page" not in st.session_state:
     st.session_state.page = "login"
 
+
 def login_page():
     st.title("Login/Sign Up")
     if st.button("Sign In"):
@@ -36,8 +39,30 @@ def login_page():
         st.session_state.user_registered = "New User"
         st.rerun()
 
+
+def validate_name_email(name: str, email: str) -> bool:
+    if not name and not email:
+        st.error("Both name and email fields are empty")
+        return False
+    elif not name:
+        st.error("Name field is empty")
+        return False
+    elif not email:
+        st.error("Email field is empty")
+        return False
+    # Cryptic email regex for email validation
+    email_regex = re.compile(r"^\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$")
+    if not email_regex.match(email):
+        st.error("Email address is not valid")
+        return False
+    return True
+
+
 def add_user(name, email):
     try:
+        is_valid = validate_name_email(name, email)
+        if not is_valid:
+            return False
         users_ref = db.collection("users")
         users_ref.add({"name": name, "email": email})
         st.session_state.user_registered = True
@@ -45,6 +70,7 @@ def add_user(name, email):
     except Exception as e:
         st.error(f"Error adding user: {e}")
         return False
+
 
 def register():
     st.title("Sign Up")
@@ -63,17 +89,22 @@ def register():
             status_placeholder.empty()
             st.rerun()
 
-def authenticate():
+
+def authenticate() -> None:
     st.title("Sign In")
     u_name = st.text_input("Enter Name")
     email = st.text_input("Enter Email")
     if st.button("Sign In"):
+        is_valid = validate_name_email(u_name, email)
+        if not is_valid:
+            return
         user_ref = db.collection("users").where("name", "==", u_name).where("email", "==", email).get()
         if user_ref:
             st.session_state["user_name"] = u_name
             st.switch_page("pages/Customer_dashboard.py")
         else:
             st.error("Incorrect name or email")
+
 
 if st.session_state.user_registered is None:
     login_page()
