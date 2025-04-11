@@ -14,7 +14,7 @@ if "branch" in st.session_state:
 product_name = st.text_input("   Search Product   ")
 
 encoded_branch = urllib.parse.quote(branch)
-encoded_product = urllib.parse.quote(product_name)
+encoded_product = urllib.parse.quote(product_name.lower())
 
 response = requests.get(f"{BASE_URL}/{provider}/{encoded_branch}/{encoded_product}/get_product")
 
@@ -22,9 +22,10 @@ response = requests.get(f"{BASE_URL}/{provider}/{encoded_branch}/{encoded_produc
 if response.status_code == 200:
     st.write("Product Found")
     product_details = response.json()
-    st.write(f"Quantity : {product_details['Quantity']}")
-    st.write(f"Loaction : {product_details['Location']}")
+    st.write(f"Quantity : {product_details['quantity']}")
+    #st.write(f"Loaction : {product_details['Location']}")
 
 
-else:
+
+if response.status_code == 404:
     st.error("No product found")
