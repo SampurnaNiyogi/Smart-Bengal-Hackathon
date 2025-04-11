@@ -23,36 +23,33 @@ db = firestore.client()
 
 app = Flask(__name__)
 
-
+#Get Product
 @app.get('/<provider>/<branch>/<product_name>/get_product')
-def get_products(provider, branch, product_name):
-    products_ref = db.collection("provider").document(provider).collection(branch).document(product_name)
-    doc = products_ref.get()
-
-    if doc.exists:
-        return jsonify(doc.to_dict())  # ✅ Convert Firestore document to dictionary
-    else:
-        return jsonify({"error": "No products found"}), 404  # ✅ Ensure error is JSON
-
-
-# Fetch product location from a specific branch
-@app.get('/get_location/<provider>/<branch>')
-def get_location(provider, branch):
-    doc_ref = db.collection("provider").document(provider).collection(branch).document("location")
+def get_product(provider, branch, product_name):
+    doc_ref = db.collection("provider").document(provider)
     doc = doc_ref.get()
 
-    if doc.exists:
-        return jsonify(doc.to_dict())
-    else:
-        return jsonify({"error": "Location data not found"}), 404
+    if not doc.exists:
+        return jsonify({"error": "Retailer not found"}), 404
+
+    data = doc.to_dict()
+    try:
+        product_data = data[branch][product_name]
+        return jsonify(product_data)
+    except KeyError:
+        return jsonify({"error": "Product not found"}), 404
 
 
-# Add a new product to a branch (Provider)
-@app.post('/<provider>/<branch>/add_product')
-def add_product(provider, branch):
-    data = request.json
-    db.collection("provider").document(provider).collection(branch).document().set(data)
-    return jsonify({"message": "Product added successfully!"})
+# Get branch Option
+@app.get('/<provider>/get_branch')
+def get_branches(provider):
+    doc = db.collection("provider").document(provider).get()
+    if not doc.exists:
+        return jsonify({"error": "Retailer not found"}), 404
+
+    data = doc.to_dict()
+    branch_names = list(data.keys())  # Top-level fields like 'Ruby', 'Salt Lake'
+    return jsonify(branch_names)
 
 
 # Get Retailers Option
@@ -64,28 +61,7 @@ def get_providers():
     return jsonify(provider_list)
 
 
-# Fetch all branches for a selected provider
-@app.get('/<provider>/get_branch')
-def get_branches(provider):
-    try:
-        # Reference to the provider document
-        provider_doc = db.collection("provider").document(provider)
-
-        # Get all subcollections (branches) under the selected provider
-        branches = provider_doc.collections()
-
-        # Extract collection names
-        branch_list = [branch.id for branch in branches]
-
-        if not branch_list:
-            return jsonify({"error": "No branches found"}), 404
-
-        return jsonify(branch_list)
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-
+#Firestore connection
 @app.get('/test_firestore')
 def test_firestore():
     try:
@@ -96,6 +72,45 @@ def test_firestore():
         return jsonify(provider_list if provider_list else ["No Data"])
     except Exception as e:
         return jsonify({"error": str(e)})
+
+
+#Add to cart
+@app.post('/<user_id>/add_to_cart')
+def add_to_cart(user_id):
+    data = request.json  # Expected: {"product_name": "apple", "quantity": 2, ...}
+    
+    cart_ref = db.collection("carts").document(user_id)
+    current_cart = cart_ref.get().to_dict() or {}
+
+    # Add or update product in the cart
+    product_name = data.get("product_name")
+    
+    if not product_name:
+        return jsonify({"error": "Product name is required"}), 400
+
+    # Merge or initialize product entry
+    if product_name in current_cart:
+        current_cart[product_name]['quantity'] += data.get("quantity", 1)
+    else:
+        current_cart[product_name] = {
+            "quantity": data.get("quantity", 1),
+            "price": data.get("price", 0.0)
+        }
+
+    cart_ref.set(current_cart)
+    return jsonify({"message": f"{product_name} added to cart"})
+
+
+#View Cart Details
+@app.get('/<user_id>/get_cart')
+def get_cart(user_id):
+    cart_ref = db.collection("carts").document(user_id)
+    doc = cart_ref.get()
+
+    if doc.exists:
+        return jsonify(doc.to_dict())
+    else:
+        return jsonify({})  # Empty cart
 
 
 if __name__ == '__main__':

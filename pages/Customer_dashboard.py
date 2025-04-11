@@ -20,8 +20,11 @@ if response.status_code == 200:
 else:
     provider_options = ["Error fetching retail"]
 
+
 retailer_option = st.selectbox("Select retailer:", provider_options)
 st.session_state.retail = retailer_option
+doc_debug = requests.get(f"{BASE_URL}/{retailer_option}/get_branch")
+
 st.write(f"You selected {retailer_option}")
 
 # Fetch branches dynamically based on selected provider
@@ -33,11 +36,12 @@ if retailer_option and retailer_option != "Error fetching providers":
     else:
         branch_options = ["No branches found"]
 
-    # Branch Dropdown
-
     selected_branch = st.selectbox("Choose a Branch:", branch_options)
     st.session_state.branch = selected_branch
     st.write(f"Selected: {retailer_option} -> {selected_branch}")
 
+
 if st.button("Product Search"):
     st.switch_page("pages/Search_dashboard.py")
+if st.button("🛒 View Cart"):
+    st.switch_page("pages/Cart_dashboard.py")
