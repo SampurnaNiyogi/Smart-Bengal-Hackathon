@@ -197,20 +197,15 @@ def login_page():
     <div class="divider"><span>or continue with</span></div>
     """, unsafe_allow_html=True)
     
-    # Embed fingerprint image as base64 string
-    fingerprint_base64 = """
-    <!-- Insert your base64 encoded image string here -->
-    """
     st.markdown(f"""
     <div style="display: flex; flex-direction: column; align-items: center;">
-        <img src="data:image/png;base64,{fingerprint_base64}" style="width:60px; height:60px; margin-bottom:8px;">
+        <img src="assets/fingerprint.jpeg" alt="fingerprint"  style="width:60px; height:60px; margin-bottom:8px;">
     </div>
     """, unsafe_allow_html=True)
     if st.button("Fingerprint"):
         st.info("Fingerprint authentication coming soon!")
-    
-   
     st.markdown('</div>', unsafe_allow_html=True)
+
 
 def validate_name_email(name: str, email: str) -> bool:
     if not name and not email:
