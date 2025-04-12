@@ -1,71 +1,86 @@
 import streamlit as st
 import requests
+import time
+
 
 BASE_URL = "http://127.0.0.1:5000"
 
-# Check for user ID
+# Session check
 if "user_name" not in st.session_state:
-    st.error("Please log in to view your cart.")
+    st.error("🚫 Please log in to view your cart.")
     st.stop()
 
-user_id = st.session_state["user_name"]  # or st.session_state["user_id"] if you store that
+user_id = st.session_state["user_name"]
 
-st.title(f"{user_id}'s Cart")
+st.markdown(f"<h2 style='text-align: center;'>🛒 {user_id}'s Shopping Cart</h2>", unsafe_allow_html=True)
+st.markdown("---")
 
-# Fetch cart data
+# Fetch cart
 response = requests.get(f"{BASE_URL}/{user_id}/get_cart")
 
 if response.status_code == 200:
     cart = response.json()
-    
+
     if not cart:
-        st.info("Your cart is empty.")
+        st.info("🛍️ Your cart is currently empty.")
     else:
         total = 0
-        
+
         for product, details in cart.items():
-            st.markdown(f"### 🛍 {product.capitalize()}")
-            st.write(f"Price per item: ₹{details['price']}")
+            with st.container():
+                st.markdown("#### 🧾 " + product.title())
+                col1, col2 = st.columns([3, 1])
 
-            # Editable quantity input
-            new_qty = st.number_input(
-                f"Quantity for {product}", 
-                min_value=0,  # allow 0 to mean delete
-                value=details["quantity"], 
-                key=product
-            )
+                with col1:
+                    st.write(f"**Price per item:** ₹{details['price']}")
+                    st.write(f"**Current quantity:** {details['quantity']}")
 
-            if new_qty != details["quantity"]:
-                if st.button(f"Update {product}", key=f"btn_{product}"):
-                    update = requests.post(
-                        f"{BASE_URL}/{user_id}/update_cart_item",
-                        json={"product_name": product, "quantity": new_qty}
+                    new_qty = st.number_input(
+                        f"Update quantity for {product}",
+                        min_value=0,
+                        value=details["quantity"],
+                        key=product
                     )
-                    if update.status_code == 200:
-                        st.success(f"{product} updated!")
-                        st.rerun()
-                    else:
-                        st.error("Failed to update cart.")
-            total += new_qty * details["price"]
 
-        st.subheader(f"🧾 Total: ₹{total}")
+                    if new_qty != details["quantity"]:
+                        if st.button(f"Update {product}", key=f"btn_{product}"):
+                            update = requests.post(
+                                f"{BASE_URL}/{user_id}/update_cart_item",
+                                json={"product_name": product, "quantity": new_qty}
+                            )
+                            if update.status_code == 200:
+                                st.success(f"✅ {product.title()} updated successfully!")
+                                st.rerun()
+                            else:
+                                st.error("❌ Failed to update cart.")
 
+                with col2:
+                    item_total = new_qty * details['price']
+                    st.markdown(f"### ₹{item_total:.2f}")
+                    total += item_total
+
+                st.markdown("---")
+
+        # Cart Total
+        st.markdown(f"<h3 style='text-align:right;'>🧾 Total: ₹{total:.2f}</h3>", unsafe_allow_html=True)
+
+        # Checkout button
+        st.markdown("### ")
+        if st.button("✅ Proceed to Checkout", use_container_width=True):
+            checkout_payload = {
+                "provider": st.session_state.get("retail", ""),
+                "branch": st.session_state.get("branch", "")
+            }
+
+            response = requests.post(f"{BASE_URL}/{user_id}/checkout", json=checkout_payload)
+
+            if response.status_code == 200:
+                st.success("🎉 Order placed successfully!")
+                st.toast("🛍️ Your cart is now empty. Happy shopping!", icon="🛒")
+                time.sleep(5)  
+                st.rerun()
+            else:
+                st.error("❌ Checkout failed: " + response.json().get("error", "Unknown error."))
+                st.toast("⚠️ Something went wrong", icon="⚠️")
 else:
-    st.error("Failed to fetch cart.")
-
-if st.button("✅ Proceed to Checkout"):
-    st.write("Provider:", st.session_state["retail"])
-    st.write("Branch:", st.session_state["branch"])
-    checkout_payload = {
-        "provider": st.session_state["retail"],  # lowercase enforced in backend
-        "branch": st.session_state["branch"]
-    }
-
-    response = requests.post(f"{BASE_URL}/{user_id}/checkout", json=checkout_payload)
-
-    if response.status_code == 200:
-        st.success("✅ Order placed successfully!")
-        st.rerun()
-    else:
-        st.error(response.json().get("error", "Checkout failed."))
-
+    st.error("❌ Failed to fetch cart.")

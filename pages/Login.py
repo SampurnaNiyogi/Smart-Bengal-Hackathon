@@ -1,11 +1,12 @@
 import re
-
 import streamlit as st
 import firebase_admin
 from firebase_admin import credentials, firestore
 import time
 from dotenv import load_dotenv
 import os
+from PIL import Image
+import base64
 
 # Load environment variables from .env
 load_dotenv()
@@ -28,6 +29,11 @@ if "user_registered" not in st.session_state:
 
 if "page" not in st.session_state:
     st.session_state.page = "login"
+
+def get_base64_encoded_image(image_path):
+    with open(image_path, "rb") as img_file:
+        encoded = base64.b64encode(img_file.read()).decode()
+        return f"data:image/jpeg;base64,{encoded}"
 
 # Apply custom CSS
 def apply_custom_css():
@@ -196,16 +202,38 @@ def login_page():
     st.markdown("""
     <div class="divider"><span>or continue with</span></div>
     """, unsafe_allow_html=True)
-    
-    st.markdown(f"""
-    <div style="display: flex; flex-direction: column; align-items: center;">
-        <img src="assets/fingerprint.jpeg" alt="fingerprint"  style="width:60px; height:60px; margin-bottom:8px;">
-    </div>
-    """, unsafe_allow_html=True)
-    if st.button("Fingerprint"):
-        st.info("Fingerprint authentication coming soon!")
-    st.markdown('</div>', unsafe_allow_html=True)
+    # Convert image to base64
+    fingerprint_base64 = get_base64_encoded_image("assets/fingerprint.jpg")
 
+    # Centered column
+    col = st.columns([1, 6, 1])[1]
+    with col:
+        # Custom fingerprint button using HTML
+        st.markdown(f"""
+        <div style="text-align: center;">
+            <form action="" method="POST">
+                <button name="fingerprint" type="submit" style="
+                    background-image: url('{fingerprint_base64}');
+                    background-size: cover;
+                    background-position: center;
+                    height: 120px;
+                    width: 120px;
+                    border-radius: 50%;
+                    border: none;
+                    margin-top: 10px;
+                    margin-bottom: 10px;
+                    transition: transform 0.2s ease-in-out;
+                " title="Authenticate via Fingerprint">
+                </button>
+            </form>
+        </div>
+        """, unsafe_allow_html=True)
+
+    # Detect button click using query params
+    if "fingerprint" in st.query_params:
+        st.success("Fingerprint authentication coming soon!")
+    st.markdown('</div>', unsafe_allow_html=True)
+    
 
 def validate_name_email(name: str, email: str) -> bool:
     if not name and not email:
@@ -305,7 +333,7 @@ def authenticate() -> None:
             st.session_state["user_name"] = u_name
             # Centered Loading Text
             status_text = st.empty()
-            status_text.markdown("<h3 style='text-align: center;'>Authenticating.....</h3>", unsafe_allow_html=True)
+            status_text.markdown("<h3 style='text-align: center;'>Entering Store.....</h3>", unsafe_allow_html=True)
 
             # Shopping Cart SVG Animation
             loading_svg = """
