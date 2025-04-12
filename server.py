@@ -5,6 +5,10 @@ from firebase_admin import credentials, firestore
 from dotenv import load_dotenv
 import os
 
+
+from datetime import datetime
+
+
 # Load environment variables from .env
 load_dotenv()
 
@@ -111,6 +115,89 @@ def get_cart(user_id):
         return jsonify(doc.to_dict())
     else:
         return jsonify({})  # Empty cart
+
+
+@app.post('/<user_id>/update_cart_item')
+def update_cart_item(user_id):
+    data = request.json  # expects: { "product_name": "bread", "quantity": 3 }
+
+    product = data.get("product_name")
+    new_qty = data.get("quantity")
+
+    if not product or new_qty is None:
+        return jsonify({"error": "Missing product or quantity"}), 400
+
+    cart_ref = db.collection("carts").document(user_id)
+    cart = cart_ref.get().to_dict() or {}
+
+    if product not in cart:
+        return jsonify({"error": "Item not in cart"}), 404
+
+    if new_qty <= 0:
+        del cart[product]  # remove item
+    else:
+        cart[product]["quantity"] = new_qty
+
+    cart_ref.set(cart)
+    return jsonify({"message": "Cart updated"})
+
+
+@app.post('/<user_id>/checkout')
+def checkout(user_id):
+    data = request.json
+
+    provider = data.get("provider", "")
+    branch = data.get("branch", "")
+    if not provider or not branch:
+        return jsonify({"error": "Missing provider or branch"}), 400
+
+    # Fetch cart
+    cart_ref = db.collection("carts").document(user_id)
+    cart = cart_ref.get().to_dict()
+
+    if not cart:
+        return jsonify({"error": "Cart is empty"}), 400
+
+    # Fetch provider data
+    provider_ref = db.collection("provider").document(provider)
+    provider_doc = provider_ref.get()
+    if not provider_doc.exists:
+        return jsonify({"error": "Provider not found"}), 404
+
+    provider_data = provider_doc.to_dict()
+
+    if branch not in provider_data:
+        return jsonify({"error": "Branch not found"}), 404
+
+    # Validate stock
+    for product, item in cart.items():
+        stock = provider_data[branch].get(product, {}).get("quantity", 0)
+        if item["quantity"] > stock:
+            return jsonify({
+                "error": f"Only {stock} '{product}' available in stock."
+            }), 400
+
+    # Deduct quantities
+    for product, item in cart.items():
+        provider_data[branch][product]["quantity"] -= item["quantity"]
+
+    # Save updated stock
+    provider_ref.set(provider_data)
+
+    # Save order to history
+    total = sum(item["price"] * item["quantity"] for item in cart.values())
+    order_data = {
+        "items": cart,
+        "total": total,
+        "timestamp": datetime.utcnow()
+    }
+
+    db.collection("orders").document(user_id).collection("history").add(order_data)
+
+    # Clear the cart
+    cart_ref.set({})
+
+    return jsonify({"message": "Checkout successful!", "order": order_data})
 
 
 if __name__ == '__main__':

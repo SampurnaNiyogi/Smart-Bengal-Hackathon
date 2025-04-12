@@ -22,14 +22,50 @@ if response.status_code == 200:
         st.info("Your cart is empty.")
     else:
         total = 0
+        
         for product, details in cart.items():
-            st.write(f"🛍 **{product.capitalize()}**")
-            st.write(f"Quantity: {details['quantity']}")
+            st.markdown(f"### 🛍 {product.capitalize()}")
             st.write(f"Price per item: ₹{details['price']}")
-            st.write("---")
-            total += details['quantity'] * details['price']
+
+            # Editable quantity input
+            new_qty = st.number_input(
+                f"Quantity for {product}", 
+                min_value=0,  # allow 0 to mean delete
+                value=details["quantity"], 
+                key=product
+            )
+
+            if new_qty != details["quantity"]:
+                if st.button(f"Update {product}", key=f"btn_{product}"):
+                    update = requests.post(
+                        f"{BASE_URL}/{user_id}/update_cart_item",
+                        json={"product_name": product, "quantity": new_qty}
+                    )
+                    if update.status_code == 200:
+                        st.success(f"{product} updated!")
+                        st.rerun()
+                    else:
+                        st.error("Failed to update cart.")
+            total += new_qty * details["price"]
 
         st.subheader(f"🧾 Total: ₹{total}")
 
 else:
     st.error("Failed to fetch cart.")
+
+if st.button("✅ Proceed to Checkout"):
+    st.write("Provider:", st.session_state["retail"])
+    st.write("Branch:", st.session_state["branch"])
+    checkout_payload = {
+        "provider": st.session_state["retail"],  # lowercase enforced in backend
+        "branch": st.session_state["branch"]
+    }
+
+    response = requests.post(f"{BASE_URL}/{user_id}/checkout", json=checkout_payload)
+
+    if response.status_code == 200:
+        st.success("✅ Order placed successfully!")
+        st.rerun()
+    else:
+        st.error(response.json().get("error", "Checkout failed."))
+
