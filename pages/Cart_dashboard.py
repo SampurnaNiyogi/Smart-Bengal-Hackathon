@@ -71,16 +71,12 @@ if response.status_code == 200:
                 "provider": st.session_state.get("retail", ""),
                 "branch": st.session_state.get("branch", "")
             }
-
-            response = requests.post(f"{BASE_URL}/{user_id}/checkout", json=checkout_payload)
-
-            if response.status_code == 200:
-                st.success("🎉 Order placed successfully!")
-                st.toast("🛍️ Your cart is now empty. Happy shopping!", icon="🛒")
-                time.sleep(5)  
-                st.rerun()
-            else:
-                st.error("❌ Checkout failed: " + response.json().get("error", "Unknown error."))
-                st.toast("⚠️ Something went wrong", icon="⚠️")
+            st.session_state["checkout_payload"] = {
+            "provider": st.session_state["retail"],
+            "branch": st.session_state["branch"]
+            }
+            st.switch_page("pages/Payment_page.py")    
+            st.rerun()
+           
 else:
     st.error("❌ Failed to fetch cart.")
