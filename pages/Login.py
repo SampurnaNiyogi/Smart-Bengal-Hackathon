@@ -7,6 +7,8 @@ from dotenv import load_dotenv
 import os
 from PIL import Image
 import base64
+import uuid
+import random
 
 # Set page config early
 st.set_page_config(page_title="Smart Retail - Login", page_icon="🛒", layout="centered")
@@ -267,7 +269,13 @@ def add_user(name, email):
         if not is_valid:
             return False
         users_ref = db.collection("users")
-        users_ref.add({"name": name, "email": email})
+        fingerprint_id = str(uuid.uuid4())[:8]  # Generate short unique ID
+        users_ref = db.collection("users")
+        users_ref.add({
+            "name": name,
+            "email": email,
+            "fingerprint_id": fingerprint_id
+        })
         st.session_state.user_registered = True
         return True
     except Exception as e:
@@ -433,13 +441,30 @@ def fingerprint_auth():
         elif i < 60:
             status_text.markdown("<p style='text-align: center;'>Analyzing print pattern...</p>", unsafe_allow_html=True)
         elif i < 90:
-            status_text.markdown("<p style='text-align: center;'>Verifying identity...</p>", unsafe_allow_html=True)
+            status_text.markdown("<p style='text-align: center;'>Verifying ...</p>", unsafe_allow_html=True)
         else:
-            status_text.markdown("<p style='text-align: center;'>Authentication successful!</p>", unsafe_allow_html=True)
-        time.sleep(0.05)  # Adjust speed of scan
-    
+            status_text.markdown("<p style='text-align: center;'>Authenticating...</p>", unsafe_allow_html=True)
+
+    # Fetch all users with fingerprint IDs
+    users = db.collection("users").get()
+    fingerprint_users = [user.to_dict() for user in users if "fingerprint_id" in user.to_dict()]
+
+    if not fingerprint_users:
+        st.error("No fingerprint-enabled users found.")
+        return
+
+    # Pick one user randomly for now (simulate fingerprint match)
+    matched_user = random.choice(fingerprint_users)
+    st.session_state["user_name"] = matched_user["name"]
+    st.session_state["user_email"] = matched_user["email"]
+    st.session_state["fingerprint_id"] = matched_user["fingerprint_id"]
+
+    time.sleep(2)
+    status_text.markdown("<p style='text-align: center;'>Authentication successful!.....</p>", unsafe_allow_html=True)
+    time.sleep(0.05)  # Adjust speed of scan
+
     # Success message
-    st.success("Authentication successful! Redirecting to store...")
+    st.toast("Authentication successful! Redirecting to store...")
     
     # Remove scan line after completion
     scan_container.markdown(f"""
@@ -461,8 +486,6 @@ def fingerprint_auth():
     loading_placeholder.empty()
     status_text.empty()
 
-    # Set a default user for the fingerprint auth
-    st.session_state["user_name"] = "Fingerprint User"
     
     # Redirect to dashboard
     st.switch_page("pages/Customer_dashboard.py")

@@ -1,7 +1,7 @@
 import streamlit as st
 import requests
 import time
-
+import urllib.parse
 
 BASE_URL = "http://127.0.0.1:5000"
 
@@ -14,6 +14,18 @@ user_id = st.session_state["user_name"]
 
 st.markdown(f"<h2 style='text-align: center;'>🛒 {user_id}'s Shopping Cart</h2>", unsafe_allow_html=True)
 st.markdown("---")
+# Details about retailer and branch 
+if "retail" in st.session_state:
+    provider = st.session_state['retail']
+else:
+    provider = "Unknown Retailer"
+
+if "branch" in st.session_state:
+    branch = st.session_state['branch']
+else:
+    branch = "Unknown Branch"
+
+encoded_branch = urllib.parse.quote(branch)
 
 # Fetch cart
 response = requests.get(f"{BASE_URL}/{user_id}/get_cart")
@@ -27,6 +39,10 @@ if response.status_code == 200:
         total = 0
 
         for product, details in cart.items():
+            encoded_product = urllib.parse.quote(product.lower())
+            response_product = requests.get(f"{BASE_URL}/{provider}/{encoded_branch}/{encoded_product}/get_product")
+            if response.status_code == 200:
+                product_details = response_product.json()
             with st.container():
                 st.markdown("#### 🧾 " + product.title())
                 col1, col2 = st.columns([3, 1])
@@ -38,6 +54,7 @@ if response.status_code == 200:
                     new_qty = st.number_input(
                         f"Update quantity for {product}",
                         min_value=0,
+                        max_value=product_details['quantity'], 
                         value=details["quantity"],
                         key=product
                     )
