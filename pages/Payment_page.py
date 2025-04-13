@@ -54,7 +54,7 @@ if st.button("💸 Pay Now", use_container_width=True):
     with st.spinner("Processing Payment..."):
         time.sleep(3)  
 
-        response = requests.post(f"{BASE_URL}/{user_id}/checkout", json=checkout_payload)
+        response = requests.post(f"{BASE_URL}/{user_id}/final_checkout", json=checkout_payload)
 
     if response.status_code == 200:
         st.success("🎉 Payment successful! Your order has been placed.")
@@ -64,6 +64,7 @@ if st.button("💸 Pay Now", use_container_width=True):
     else:
         st.error("❌ Payment failed.")
         st.toast("⚠️ Please try again.")
+        st.text(f"Reason: {response.text}")
 if st.button("Cancel Payment", use_container_width=True):
     with st.spinner("Returning to Cart....."):
         time.sleep(4)

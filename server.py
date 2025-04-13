@@ -86,7 +86,7 @@ def add_to_cart(user_id,retail,branch):
     
     product_ref = db.collection("provider").document(retail)
     current_product = product_ref.get().to_dict() or {}
-    
+
     cart_ref = db.collection("carts").document(user_id)
     current_cart = cart_ref.get().to_dict() or {}
 
@@ -191,25 +191,47 @@ def checkout(user_id):
             return jsonify({
                 "error": f"Only {stock} '{product}' available in stock."
             }), 400
-    timeStamp = datetime.utcnow()
-    # Save order to history
+    
+        return jsonify({"message": "Checkout successful!"})
+
+#After checkout with payment
+@app.post('/<user_id>/final_checkout')
+def final_checkout(user_id):
+    data = request.json
+    provider = data.get("provider", "")
+    branch = data.get("branch", "")
+
+    if not provider or not branch:
+        return jsonify({"error": "Missing provider or branch"}), 400
+
+    # Fetch cart
+    cart_ref = db.collection("carts").document(user_id)
+    cart = cart_ref.get().to_dict()
+
+    if not cart:
+        return jsonify({"error": "Cart is empty"}), 400
+
+    # Finalize order (assumes stock already adjusted earlier)
     total = sum(item["price"] * item["quantity"] for item in cart.values())
+    timeStamp = datetime.utcnow()
     order_data = {
         "items": cart,
         "total": total,
         "timestamp": timeStamp
     }
-    #Fetch order
+
+    # Save to order history
     order_ref = db.collection("orders").document(user_id)
     curr_order = order_ref.get().to_dict() or {}
-    curr_order['history'][timeStamp] = order_data
-    
+    if 'history' not in curr_order:
+        curr_order['history'] = {}
+    curr_order['history'][str(timeStamp)] = order_data
 
-    # Clear the cart and get order details
+    # Write and clear
+    order_ref.set(curr_order)
     cart_ref.set({})
-    order_ref.set({})
 
-    return jsonify({"message": "Checkout successful!", "order": order_data})
+    return jsonify({"message": "Ordered successful!y", "order": order_data})
 
 
 if __name__ == '__main__':
