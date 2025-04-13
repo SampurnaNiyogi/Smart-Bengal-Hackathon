@@ -345,6 +345,7 @@ def authenticate() -> None:
         if not is_valid:
             return
         user_ref = db.collection("users").where("name", "==", u_name).where("email", "==", email).get()
+
         if user_ref:
             st.session_state["user_name"] = u_name
             # Centered Loading Text
