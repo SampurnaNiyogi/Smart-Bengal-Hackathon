@@ -268,10 +268,9 @@ def add_user(name, email):
         is_valid = validate_name_email(name, email)
         if not is_valid:
             return False
-        users_ref = db.collection("users")
+        users_ref = db.collection("users").document(name)
         fingerprint_id = str(uuid.uuid4())[:8]  # Generate short unique ID
-        users_ref = db.collection("users")
-        users_ref.add({
+        users_ref.set({
             "name": name,
             "email": email,
             "fingerprint_id": fingerprint_id
