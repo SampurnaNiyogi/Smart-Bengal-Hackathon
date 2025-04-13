@@ -195,35 +195,38 @@ if product_name:
                 st.markdown(f"**💰 Price:** `₹{product_details['price']}`")
 
             with col2:
-                quantity = st.number_input("Quantity", 
-                                        min_value=1, 
-                                        max_value=product_details['quantity'], 
-                                        value=1,
-                                        step=1,
-                                        key="quantity_input")
+                if product_details['quantity'] == 0:
+                    st.info("Product Not Available")
+                elif product_details['quantity'] > 0:
+                    quantity = st.number_input("Quantity", 
+                                            min_value=1, 
+                                            max_value=product_details['quantity'], 
+                                            value=1,
+                                            step=1,
+                                            key="quantity_input")
+                    if st.button("➕ Add to Cart", use_container_width=True) and (product_details['quantity'] - quantity) >= 0:
+                        user_id = st.session_state.get("user_name", "guest")
 
-                if st.button("➕ Add to Cart", use_container_width=True):
-                    user_id = st.session_state.get("user_name", "guest")
+                        add_response = requests.post(
+                            f"{BASE_URL}/{provider}/{encoded_branch}/{user_id}/add_to_cart",
+                            json={
+                                "product_name": product_name.lower(),
+                                "quantity": quantity,
+                                "price": product_details["price"]
+                            }
+                        )
 
-                    add_response = requests.post(
-                        f"{BASE_URL}/{user_id}/add_to_cart",
-                        json={
-                            "product_name": product_name.lower(),
-                            "quantity": quantity,
-                            "price": product_details["price"]
-                        }
-                    )
-
-                    if add_response.status_code == 200:
-                        st.success(f"✅ {product_name.title()} added to cart!")
-                    else:
-                        st.error(f"❌ Failed to add: {add_response.json().get('error')}")
+                        if add_response.status_code == 200:
+                            st.success(f"✅ {product_name.title()} added to cart!")
+                            st.rerun()
+                        else:
+                            st.error(f"❌ Failed to add: {add_response.json().get('error')}")
 
     elif response.status_code == 400:
         st.markdown("""
         <div class="error-message">
             <strong>Product Not Found</strong><br>
-            We couldn't find the product you're looking for. Please try a different search term.
+            We couldn't find the product you're looking for. 
         </div>
         """, unsafe_allow_html=True)
 

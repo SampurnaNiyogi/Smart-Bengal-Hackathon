@@ -32,7 +32,7 @@ response = requests.get(f"{BASE_URL}/{user_id}/get_cart")
 
 if response.status_code == 200:
     cart = response.json()
-
+    
     if not cart:
         st.info("🛍️ Your cart is currently empty.")
     else:
@@ -43,6 +43,9 @@ if response.status_code == 200:
             response_product = requests.get(f"{BASE_URL}/{provider}/{encoded_branch}/{encoded_product}/get_product")
             if response.status_code == 200:
                 product_details = response_product.json()
+                available_stock = product_details.get("quantity", 0)
+                current_cart_qty = details["quantity"]
+                max_stock = current_cart_qty + available_stock
             with st.container():
                 st.markdown("#### 🧾 " + product.title())
                 col1, col2 = st.columns([3, 1])
@@ -54,7 +57,7 @@ if response.status_code == 200:
                     new_qty = st.number_input(
                         f"Update quantity for {product}",
                         min_value=0,
-                        max_value=product_details['quantity'], 
+                        max_value=max_stock,
                         value=details["quantity"],
                         key=product
                     )

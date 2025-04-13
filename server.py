@@ -27,43 +27,6 @@ db = firestore.client()
 
 app = Flask(__name__)
 
-#Get Product
-@app.get('/<provider>/<branch>/<product_name>/get_product')
-def get_product(provider, branch, product_name):
-    doc_ref = db.collection("provider").document(provider)
-    doc = doc_ref.get()
-
-    if not doc.exists:
-        return jsonify({"error": "Retailer not found"}), 404
-
-    data = doc.to_dict()
-    try:
-        product_data = data[branch][product_name]
-        return jsonify(product_data)
-    except KeyError:
-        return jsonify({"error": "Product not found"}), 404
-
-
-# Get branch Option
-@app.get('/<provider>/get_branch')
-def get_branches(provider):
-    doc = db.collection("provider").document(provider).get()
-    if not doc.exists:
-        return jsonify({"error": "Retailer not found"}), 404
-
-    data = doc.to_dict()
-    branch_names = list(data.keys())  # Top-level fields like 'Ruby', 'Salt Lake'
-    return jsonify(branch_names)
-
-
-# Get Retailers Option
-@app.get('/get_providers')
-def get_providers():
-    providers_ref = db.collection('provider')
-    docs = providers_ref.stream()
-    provider_list = [doc.id for doc in docs]  # Get document IDs (Provider Names)
-    return jsonify(provider_list)
-
 
 #Firestore connection
 @app.get('/test_firestore')
@@ -78,10 +41,51 @@ def test_firestore():
         return jsonify({"error": str(e)})
 
 
+# Get Retailers Option
+@app.get('/get_providers')
+def get_providers():
+    providers_ref = db.collection('provider')
+    docs = providers_ref.stream()
+    provider_list = [doc.id for doc in docs]  # Get document IDs (Provider Names)
+    return jsonify(provider_list)
+
+
+# Get branch Option
+@app.get('/<provider>/get_branch')
+def get_branches(provider):
+    doc = db.collection("provider").document(provider).get()
+    if not doc.exists:
+        return jsonify({"error": "Retailer not found"}), 404
+
+    data = doc.to_dict()
+    branch_names = list(data.keys())  # Top-level fields like 'Ruby', 'Salt Lake'
+    return jsonify(branch_names)
+
+
+#Get Product
+@app.get('/<provider>/<branch>/<product_name>/get_product')
+def get_product(provider, branch, product_name):
+    doc_ref = db.collection("provider").document(provider)
+    doc = doc_ref.get()
+
+    if not doc.exists:
+        return jsonify({"error": "Retailer not found"}), 404
+
+    data = doc.to_dict()
+    try:
+        product_data = data[branch][product_name]    #{'product_name' : {quantity: int , price: float}}
+        return jsonify(product_data)
+    except KeyError:
+        return jsonify({"error": "Product not found"}), 404
+
+
 #Add to cart
-@app.post('/<user_id>/add_to_cart')
-def add_to_cart(user_id):
+@app.post('/<retail>/<branch>/<user_id>/add_to_cart')
+def add_to_cart(user_id,retail,branch):
     data = request.json  # Expected: {"product_name": "apple", "quantity": 2, ...}
+    
+    product_ref = db.collection("provider").document(retail)
+    current_product = product_ref.get().to_dict() or {}
     
     cart_ref = db.collection("carts").document(user_id)
     current_cart = cart_ref.get().to_dict() or {}
@@ -89,18 +93,29 @@ def add_to_cart(user_id):
     # Add or update product in the cart
     product_name = data.get("product_name")
     
+    try:
+        current_stock = current_product[branch][product_name]['quantity']
+        product_price = current_product[branch][product_name]['price']
+    except KeyError:
+        return jsonify({"error": "Product not found"}), 404
+
+    if current_stock < data['quantity']:
+        return jsonify({"error": "Not enough stock available"}), 404
+    
     if not product_name:
         return jsonify({"error": "Product name is required"}), 400
 
-    # Merge or initialize product entry
+    # Update product entry
     if product_name in current_cart:
         current_cart[product_name]['quantity'] += data.get("quantity", 1)
     else:
         current_cart[product_name] = {
             "quantity": data.get("quantity", 1),
-            "price": data.get("price", 0.0)
-        }
+            "price": product_price
 
+        }
+    current_product[branch][product_name]['quantity'] -=  data.get("quantity", 1)
+    product_ref.update({f"{branch}.{product_name}.quantity": current_stock - data.get("quantity")})
     cart_ref.set(current_cart)
     return jsonify({"message": f"{product_name} added to cart"})
 
@@ -176,26 +191,23 @@ def checkout(user_id):
             return jsonify({
                 "error": f"Only {stock} '{product}' available in stock."
             }), 400
-
-    # Deduct quantities
-    for product, item in cart.items():
-        provider_data[branch][product]["quantity"] -= item["quantity"]
-
-    # Save updated stock
-    provider_ref.set(provider_data)
-
+    timeStamp = datetime.utcnow()
     # Save order to history
     total = sum(item["price"] * item["quantity"] for item in cart.values())
     order_data = {
         "items": cart,
         "total": total,
-        "timestamp": datetime.utcnow()
+        "timestamp": timeStamp
     }
+    #Fetch order
+    order_ref = db.collection("orders").document(user_id)
+    curr_order = order_ref.get().to_dict() or {}
+    curr_order['history'][timeStamp] = order_data
+    
 
-    db.collection("orders").document(user_id).collection("history").add(order_data)
-
-    # Clear the cart
+    # Clear the cart and get order details
     cart_ref.set({})
+    order_ref.set({})
 
     return jsonify({"message": "Checkout successful!", "order": order_data})
 
