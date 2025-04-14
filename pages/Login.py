@@ -10,6 +10,7 @@ import base64
 import uuid
 import random
 
+
 # Set page config early
 st.set_page_config(page_title="Smart Retail - Login", page_icon="🛒", layout="centered")
 
@@ -348,6 +349,7 @@ def authenticate() -> None:
 
         if user_ref:
             st.session_state["user_name"] = u_name
+            st.session_state["user_email"] = email
             # Centered Loading Text
             status_text = st.empty()
             status_text.markdown("<h3 style='text-align: center;'>Entering Store.....</h3>", unsafe_allow_html=True)
