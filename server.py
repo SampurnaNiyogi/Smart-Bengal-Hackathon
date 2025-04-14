@@ -480,6 +480,31 @@ def generate_invoice(user_id, output_path="invoice.pdf"):
     doc.build(story)
     return jsonify("message")
 
+@app.get('/<provider>/<branch>/<barcode_id>/get_product_by_barcode')
+def get_product_by_barcode(provider, branch, barcode_id):
+    doc_ref = db.collection("provider").document(provider)
+    doc = doc_ref.get()
+
+    if not doc.exists:
+        return jsonify({"error": "Retailer not found"}), 404
+
+    data = doc.to_dict()
+    try:
+        branch_data = data[branch]  # this is the map like {"bread": {...}, "milk": {...}}
+        for product_name, details in branch_data.items():
+            if details.get("barcode_id") == barcode_id:
+                return jsonify({
+                    "product_name": product_name,
+                    "quantity": details.get("quantity", 0),
+                    "price": details.get("price", 0)
+                })
+        return jsonify({"error": "Barcode not found"}), 404
+    except KeyError:
+        return jsonify({"error": "Branch not found"}), 404
+
+
+
+
 
 
 
