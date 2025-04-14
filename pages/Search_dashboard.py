@@ -2,6 +2,17 @@ import streamlit as st
 import requests
 import urllib.parse
 
+
+
+from store_map import render_store_map
+
+# Navigation
+page = st.sidebar.selectbox("Go to", ["Store Map", "Products"])
+
+if page == "Store Map":
+    render_store_map()
+
+
 # Custom CSS for enhanced styling
 st.markdown("""
 <style>
