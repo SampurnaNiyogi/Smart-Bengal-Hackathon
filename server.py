@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 import firebase_admin
 from firebase_admin import credentials, firestore
+import re
 
 from dotenv import load_dotenv
 import os
@@ -18,7 +19,8 @@ from reportlab.lib import colors
 from reportlab.lib.units import mm
 from reportlab.platypus import Table, TableStyle, SimpleDocTemplate, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet
-
+import uuid
+import random
 # Load environment variables from .env
 load_dotenv()
 
@@ -54,6 +56,92 @@ def test_firestore():
     except Exception as e:
         return jsonify({"error": str(e)})
 
+def validate_name_email(name: str, email: str) -> str:
+    # Validation logic for name and email
+    if not name and not email:
+        return "Both name and email fields are empty"
+    elif not name:
+        return "Name field is empty"
+    elif not email:
+        return "Email field is empty"
+    
+    # Email regex validation
+    email_regex = re.compile(r"^\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$")
+    if not email_regex.match(email):
+        return "Email address is not valid"
+    
+    return None  # No errors found
+
+
+@app.post("/add_user")
+def add_user():
+    try:
+        data = request.get_json()
+        name = data.get("name", "").strip()
+        email = data.get("email", "").strip()
+
+        # Validation
+        validation_error = validate_name_email(name, email)
+        if validation_error:
+            return jsonify({"success": False, "error": validation_error}), 400
+
+        # Firestore user creation
+        fingerprint_id = str(uuid.uuid4())[:8]
+        user_ref = db.collection("users").document(email)  # Use email as unique key
+        user_ref.set({
+            "name": name,
+            "email": email,
+            "fingerprint_id": fingerprint_id
+        })
+
+        return jsonify({"success": True, "fingerprint_id": fingerprint_id}), 200
+
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route('/login_user', methods=['POST'])
+def login_user():
+    data = request.get_json()  # Get data from request
+
+    # Extract name and email
+    name = data.get('name')
+    email = data.get('email')
+
+    # Validate inputs
+    validation_error = validate_name_email(name, email)
+    if validation_error:
+        return jsonify({"success": False, "error": validation_error}), 400
+
+    # Check if user exists in Firestore
+    user_ref = db.collection('users').where('name', '==', name).where('email', '==', email).get()
+    
+    if user_ref:
+        # User found
+        return jsonify({"success": True}), 200
+    else:
+        # User not found
+        return jsonify({"success": False, "error": "User not found"}), 404
+    
+@app.get('/fingerprint_auth')
+def fingerprint_auth():
+    try:
+        # Fetch all users with fingerprint IDs
+        users = db.collection("users").get()
+                 
+        fingerprint_users = [user.to_dict() for user in users if "fingerprint_id" in user.to_dict()]
+
+        if not fingerprint_users:
+            return jsonify({"error": "No fingerprint-enabled users found."}), 404
+        # Pick one user randomly for now (simulate fingerprint match)
+        matched_user = random.choice(fingerprint_users)
+        
+        details = {"user_name":  matched_user["name"], "user_email" : matched_user["email"],"fingerprint_id" : matched_user["fingerprint_id"]}
+        return jsonify(details), 200
+    
+    except Exception as e:
+        return jsonify({"error": "Internal Server Error...."}), 500
+    
 
 # Get Retailers Option
 @app.get('/get_providers')

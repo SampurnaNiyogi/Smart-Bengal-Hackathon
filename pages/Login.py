@@ -9,7 +9,7 @@ from PIL import Image
 import base64
 import uuid
 import random
-
+import requests
 # Set page config early
 st.set_page_config(page_title="Smart Retail - Login", page_icon="🛒", layout="centered")
 
@@ -39,6 +39,7 @@ if "fingerprint" not in st.session_state:
 if "fingerprint_scan_progress" not in st.session_state:
     st.session_state.fingerprint_scan_progress = 0
 
+BASE_URL = "http://127.0.0.1:5000"
 
 # Convert image to base64 string
 def get_base64_encoded_image(image_path):
@@ -269,43 +270,6 @@ def login_page():
     st.markdown('</div>', unsafe_allow_html=True)
 
 
-def validate_name_email(name: str, email: str) -> bool:
-    if not name and not email:
-        st.error("Both name and email fields are empty")
-        return False
-    elif not name:
-        st.error("Name field is empty")
-        return False
-    elif not email:
-        st.error("Email field is empty")
-        return False
-    # Cryptic email regex for email validation
-    email_regex = re.compile(r"^\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$")
-    if not email_regex.match(email):
-        st.error("Email address is not valid")
-        return False
-    return True
-
-
-def add_user(name, email):
-    try:
-        is_valid = validate_name_email(name, email)
-        if not is_valid:
-            return False
-        users_ref = db.collection("users").document(name)
-        fingerprint_id = str(uuid.uuid4())[:8]  # Generate short unique ID
-        users_ref.set({
-            "name": name,
-            "email": email,
-            "fingerprint_id": fingerprint_id
-        })
-        st.session_state.user_registered = True
-        return True
-    except Exception as e:
-        st.error(f"Error adding user: {e}")
-        return False
-
-
 def register():
     apply_custom_css()
 
@@ -328,17 +292,25 @@ def register():
     email = st.text_input("Enter Email")
 
     if st.button("Sign Up"):
-        if add_user(name, email):
-            st.success(f"User {name} added successfully!")
+        response = requests.post(f"{BASE_URL}/add_user", json={"name": name, "email": email})
+        result = response.json()
+
+        if result.get("success"):
+            st.success(f"✅ User {name} added successfully!")
             st.session_state.page = "consumer_dashboard"
             st.session_state.user_registered = "Existing"
+
+            # Progress-style spinner with status
             status_placeholder = st.empty()
-            with status_placeholder.status("Loading......"):
-                for i in range(2):
-                    time.sleep(1)
-            time.sleep(2)
+            with status_placeholder.status("Loading..."):
+                time.sleep(2)
+
             status_placeholder.empty()
             st.rerun()
+
+        else:
+            st.error(f"❌ {result.get('error', 'Something went wrong')}")
+        
     # Back button
     if st.button("Back to Login"):
         st.session_state.user_registered = "None"
@@ -367,15 +339,13 @@ def authenticate() -> None:
     email = st.text_input("Enter Email")
 
     if st.button("Sign In"):
-        is_valid = validate_name_email(u_name, email)
-        if not is_valid:
-            return
-        user_ref = db.collection("users").where("name", "==", u_name).where("email", "==", email).get()
+        response = requests.post(f"{BASE_URL}/login_user", json={"name": u_name, "email": email})
+        result = response.json()
 
-        if user_ref:
+        if result.get("success"):
             st.session_state["user_name"] = u_name
             st.session_state["user_email"] = email
-            # Centered Loading Text
+
             status_text = st.empty()
             status_text.markdown("<h3 style='text-align: center;'>Entering Store.....</h3>", unsafe_allow_html=True)
 
@@ -474,57 +444,52 @@ def fingerprint_auth():
         else:
             status_text.markdown("<p style='text-align: center;'>Authenticating...</p>", unsafe_allow_html=True)
 
-    # Fetch all users with fingerprint IDs
-    users = db.collection("users").get()
-    fingerprint_users = [user.to_dict() for user in users if "fingerprint_id" in user.to_dict()]
+    response = requests.get(f"{BASE_URL}/fingerprint_auth")
+    
+    if response.status_code == 200:
+        user_details = response.json() 
+        st.session_state["user_name"] = user_details["user_name"]
+        st.session_state["user_email"] = user_details["user_email"]
+        st.session_state["fingerprint_id"] = user_details["fingerprint_id"]
 
-    if not fingerprint_users:
-        st.error("No fingerprint-enabled users found.")
-        return
+        time.sleep(2)
+        status_text.markdown("<p style='text-align: center;'>Authentication successful!.....</p>", unsafe_allow_html=True)
+        time.sleep(0.05)  # Adjust speed of scan
 
-    # Pick one user randomly for now (simulate fingerprint match)
-    matched_user = random.choice(fingerprint_users)
-    st.session_state["user_name"] = matched_user["name"]
-    st.session_state["user_email"] = matched_user["email"]
-    st.session_state["fingerprint_id"] = matched_user["fingerprint_id"]
+        # Success message
+        st.toast("Authentication successful! Redirecting to store...")
 
-    time.sleep(2)
-    status_text.markdown("<p style='text-align: center;'>Authentication successful!.....</p>", unsafe_allow_html=True)
-    time.sleep(0.05)  # Adjust speed of scan
+        # Remove scan line after completion
+        scan_container.markdown(f"""
+            <div class="fingerprint-container">
+                <img src='{fingerprint_base64}' class="fingerprint-scan" />
+            </div>
+        """, unsafe_allow_html=True)
 
-    # Success message
-    st.toast("Authentication successful! Redirecting to store...")
+        time.sleep(4)
 
-    # Remove scan line after completion
-    scan_container.markdown(f"""
-        <div class="fingerprint-container">
-            <img src='{fingerprint_base64}' class="fingerprint-scan" />
-        </div>
-    """, unsafe_allow_html=True)
+        loading_placeholder = st.empty()
+        loading_placeholder.markdown(loading_svg, unsafe_allow_html=True)
 
-    time.sleep(4)
+        # Dynamic Loading Text Updates
+        time.sleep(1)
+        status_text.markdown("<h3 style='text-align: center;'>Entering Store...</h3>", unsafe_allow_html=True)
+        time.sleep(1)
+        # Clear loading animations
+        loading_placeholder.empty()
+        status_text.empty()
 
-    loading_placeholder = st.empty()
-    loading_placeholder.markdown(loading_svg, unsafe_allow_html=True)
+        # Redirect to dashboard
+        st.switch_page("pages/Customer_dashboard.py")
+        # Back button (will only show if redirect fails)
+        if st.button("Back to Login"):
+            st.session_state.fingerprint = False
+            st.session_state.user_registered = None
+            st.rerun()
 
-    # Dynamic Loading Text Updates
-    time.sleep(1)
-    status_text.markdown("<h3 style='text-align: center;'>Entering Store...</h3>", unsafe_allow_html=True)
-    time.sleep(1)
-    # Clear loading animations
-    loading_placeholder.empty()
-    status_text.empty()
-
-    # Redirect to dashboard
-    st.switch_page("pages/Customer_dashboard.py")
-
-    # Back button (will only show if redirect fails)
-    if st.button("Back to Login"):
-        st.session_state.fingerprint = False
-        st.session_state.user_registered = None
-        st.rerun()
-
-    st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+    else:
+        st.error("Authentication failed....  Status code: {response.status_code}, Error: {response.text}")
 
 
 def main():
