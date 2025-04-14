@@ -180,8 +180,6 @@ if product_name:
     if response.status_code == 200:
         product_details = response.json()
 
-
-
         st.markdown("### 🛍️ Product Details")
 
         # Create a card-like layout using a container and columns

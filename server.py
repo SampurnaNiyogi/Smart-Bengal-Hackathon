@@ -74,7 +74,7 @@ def get_product(provider, branch, product_name):
     data = doc.to_dict()
     try:
         product_data = data[branch][product_name]    #{'product_name' : {quantity: int , price: float}}
-        return jsonify(product_data)
+        return jsonify(product_data)  #{quantity: int , price: float}
     except KeyError:
         return jsonify({"error": "Product not found"}), 404
 
@@ -229,7 +229,7 @@ def final_checkout(user_id):
 
     # Write and clear
     order_ref.set(curr_order)
-    cart_ref.set({})
+    cart_ref.delete()
 
     return jsonify({"message": "Ordered successful!y", "order": order_data})
 
