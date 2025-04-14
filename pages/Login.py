@@ -373,7 +373,7 @@ def authenticate() -> None:
             time.sleep(2)
             st.switch_page("pages/Customer_dashboard.py")
         else:
-            st.error("Incorrect name or email")
+            st.error(result.get("error"))
     # Back button
     if st.button("Back to Login"):
         st.session_state.user_registered = None
