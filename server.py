@@ -21,6 +21,7 @@ from reportlab.platypus import Table, TableStyle, SimpleDocTemplate, Paragraph, 
 from reportlab.lib.styles import getSampleStyleSheet
 import uuid
 import random
+
 # Load environment variables from .env
 load_dotenv()
 
@@ -39,10 +40,12 @@ db = firestore.client()
 
 app = Flask(__name__)
 
-#test Flask
+
+# test Flask
 @app.route('/')
 def home():
     return "Hello from Flask backend!"
+
 
 # Firestore connection
 @app.get('/test_firestore')
@@ -56,6 +59,7 @@ def test_firestore():
     except Exception as e:
         return jsonify({"error": str(e)})
 
+
 def validate_name_email(name: str, email: str) -> str:
     # Validation logic for name and email
     if not name and not email:
@@ -64,12 +68,12 @@ def validate_name_email(name: str, email: str) -> str:
         return "Name field is empty"
     elif not email:
         return "Email field is empty"
-    
+
     # Email regex validation
     email_regex = re.compile(r"^\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$")
     if not email_regex.match(email):
         return "Email address is not valid"
-    
+
     return None  # No errors found
 
 
@@ -115,33 +119,35 @@ def login_user():
 
     # Check if user exists in Firestore
     user_ref = db.collection('users').where('name', '==', name).where('email', '==', email).get()
-    
+
     if user_ref:
         # User found
         return jsonify({"success": True}), 200
     else:
         # User not found
         return jsonify({"success": False, "error": "User not found"}), 404
-    
+
+
 @app.get('/fingerprint_auth')
 def fingerprint_auth():
     try:
         # Fetch all users with fingerprint IDs
         users = db.collection("users").get()
-                 
+
         fingerprint_users = [user.to_dict() for user in users if "fingerprint_id" in user.to_dict()]
 
         if not fingerprint_users:
             return jsonify({"error": "No fingerprint-enabled users found."}), 404
         # Pick one user randomly for now (simulate fingerprint match)
         matched_user = random.choice(fingerprint_users)
-        
-        details = {"user_name":  matched_user["name"], "user_email" : matched_user["email"],"fingerprint_id" : matched_user["fingerprint_id"]}
+
+        details = {"user_name": matched_user["name"], "user_email": matched_user["email"],
+                   "fingerprint_id": matched_user["fingerprint_id"]}
         return jsonify(details), 200
-    
+
     except Exception as e:
         return jsonify({"error": "Internal Server Error...."}), 500
-    
+
 
 # Get Retailers Option
 @app.get('/get_providers')
@@ -348,7 +354,7 @@ def send_invoice_email(user_id):
     pdf_path = "invoice.pdf"
     EMAIL_SENDER = "debnathaditya2005@gmail.com"
     EMAIL_PASSWORD = "wpngulalndxhywjg"
-    doc_ref = db.collection('orders').document(user_id)   # Get reference to the Firestore document
+    doc_ref = db.collection('orders').document(user_id)  # Get reference to the Firestore document
     doc = doc_ref.get()  # Fetch the document
     if doc.exists:
         data = doc.to_dict()
@@ -357,10 +363,10 @@ def send_invoice_email(user_id):
     msg['Subject'] = "🧾 Your Invoice from Demo Branch"
     msg['From'] = EMAIL_SENDER
     msg['To'] = user_email
-    
+
     # Capitalize user name for display
     formatted_name = user_id.capitalize()
-    
+
     html = f"""
     <html>
         <body style="font-family: Arial, sans-serif; line-height: 1.6;">
@@ -424,8 +430,8 @@ def generate_invoice(user_id, output_path="invoice.pdf"):
     # In a real-world scenario, you would fetch this from the user's profile
     # or session
     user_email = "debnathaditya007@gmail.com"
-    
-    doc_ref = db.collection('orders').document(user_id)   # Get reference to the Firestore document
+
+    doc_ref = db.collection('orders').document(user_id)  # Get reference to the Firestore document
     doc = doc_ref.get()  # Fetch the document
     if doc.exists:
         data = doc.to_dict()
@@ -480,6 +486,7 @@ def generate_invoice(user_id, output_path="invoice.pdf"):
     doc.build(story)
     return jsonify("message")
 
+
 @app.get('/<provider>/<branch>/<barcode_id>/get_product_by_barcode')
 def get_product_by_barcode(provider, branch, barcode_id):
     doc_ref = db.collection("provider").document(provider)
@@ -501,11 +508,6 @@ def get_product_by_barcode(provider, branch, barcode_id):
         return jsonify({"error": "Barcode not found"}), 404
     except KeyError:
         return jsonify({"error": "Branch not found"}), 404
-
-
-
-
-
 
 
 if __name__ == '__main__':

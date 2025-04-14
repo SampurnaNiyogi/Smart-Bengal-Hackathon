@@ -2,13 +2,8 @@ import streamlit as st
 import requests
 import urllib.parse
 import cv2
-from pyzbar.pyzbar import decode
-import time
-import numpy as np
-
-
-
 from pyzbar.pyzbar import decode, ZBarSymbol
+import time
 
 # from store_map import render_store_map
 
@@ -172,56 +167,56 @@ st.markdown(f"""
 # ------------------- Barcode Scanner --------------------
 
 def scan_barcode_streamlit():
+    scanned_id = ""
     cap = cv2.VideoCapture(0)
     FRAME_WINDOW = st.image([])
 
-    st.info("📸 Scanning... Show the barcode to your webcam")
-    product_id = None
+    st.info("Scanning... Show the barcode to your webcam", icon='📸')
 
     # Use session state to track cancel
     if "cancel_scan" not in st.session_state:
         st.session_state["cancel_scan"] = False
 
     # Place cancel button outside loop
-    cancel = st.button("❌ Cancel Scan")
+    cancel = st.button("Cancel Scan", icon='❌')
 
     while cap.isOpened():
         if st.session_state["cancel_scan"] or cancel:
             st.session_state["cancel_scan"] = True
             break
 
-        ret, frame = cap.read()
-        if not ret:
+        success, frame = cap.read()
+        if not success:
+            st.error('Camera cannot capture video')
             break
 
-        decoded_objects = decode(frame, symbols=[ZBarSymbol. EANB, ZBarSymbol.EAN13])
-        
-        for obj in decoded_objects:
-            product_id = obj.data.decode("utf-8")
-            cap.release()
-            cv2.destroyAllWindows()
-            st.session_state["cancel_scan"] = False
-            return product_id
+        # Decode only 2 types of barcodes used in retail
+        decoded_objects = decode(frame, symbols=[ZBarSymbol.EAN8, ZBarSymbol.EAN13])
+        if decoded_objects:
+            scanned_id = decoded_objects[0].data.decode('utf-8')
+            break
 
+        # Flip the frame horizontally
+        frame = cv2.flip(frame, 1)
         FRAME_WINDOW.image(frame, channels="BGR")
         time.sleep(0.05)  # Slight delay to reduce CPU usage
 
     cap.release()
     cv2.destroyAllWindows()
     st.session_state["cancel_scan"] = False
-    return None
+    return scanned_id
 
 
 # Scan Button
 if st.button("📷 Scan Barcode"):
-    scanned_id = scan_barcode_streamlit()
-    if scanned_id:
-        st.success(f"✅ Scanned: {scanned_id}")
+    product_id = scan_barcode_streamlit()
+    if product_id:
+        st.success(f"✅ Scanned: {product_id}")
         st.session_state["scan_time"] = time.time()
 
         # API call
         try:
-            response = requests.get(f"{BASE_URL}/{provider}/{branch}/{scanned_id}/get_product_by_barcode")
+            response = requests.get(f"{BASE_URL}/{provider}/{branch}/{product_id}/get_product_by_barcode")
             if response.status_code == 200:
                 product_data = response.json()
                 st.session_state["scanned_product"] = product_data["product_name"]
