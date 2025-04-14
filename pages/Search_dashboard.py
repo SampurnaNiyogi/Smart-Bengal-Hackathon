@@ -6,6 +6,10 @@ from pyzbar.pyzbar import decode
 import time
 import numpy as np
 
+
+
+from pyzbar.pyzbar import decode, ZBarSymbol
+
 # from store_map import render_store_map
 
 # # Navigation
@@ -190,7 +194,8 @@ def scan_barcode_streamlit():
         if not ret:
             break
 
-        decoded_objects = decode(frame)
+        decoded_objects = decode(frame, symbols=[ZBarSymbol. EANB, ZBarSymbol.EAN13])
+        
         for obj in decoded_objects:
             product_id = obj.data.decode("utf-8")
             cap.release()
