@@ -1,7 +1,6 @@
 import streamlit as st
 import requests
 
-
 # Custom CSS for enhanced styling
 st.markdown("""
 <style>
@@ -66,6 +65,7 @@ st.markdown("""
     
     .stButton>button:hover {
         background-color: #2980b9;
+        color: white;
         transform: translateY(-2px);
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     }
@@ -85,7 +85,6 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-
 BASE_URL = "http://127.0.0.1:5000"
 
 if "user_name" in st.session_state:
@@ -99,7 +98,8 @@ if "branch" not in st.session_state:
 
 # Main header
 st.markdown(f'<div class="main-header">Smart Cashier-less Retail System</div>', unsafe_allow_html=True)
-st.markdown(f'<div class="welcome-message">Hi {name}! Welcome to our smart shopping experience.</div>', unsafe_allow_html=True)
+st.markdown(f'<div class="welcome-message">Hi {name}! Welcome to our smart shopping experience.</div>',
+            unsafe_allow_html=True)
 
 # Fetch retailers
 response = requests.get(f"{BASE_URL}/get_providers")
@@ -109,7 +109,7 @@ else:
     provider_options = ["Error fetching retail"]
 
 # Retailer selection section
-#st.markdown('<div class="selection-container">', unsafe_allow_html=True)
+# st.markdown('<div class="selection-container">', unsafe_allow_html=True)
 st.markdown('<div class="selection-header">Select Your Retailer</div>', unsafe_allow_html=True)
 
 retailer_option = st.selectbox("Select retailer:", provider_options)
@@ -117,8 +117,8 @@ st.session_state.retail = retailer_option
 
 # Fetch branches dynamically based on selected provider
 if retailer_option and retailer_option != "Error fetching providers":
-    
-    #st.markdown(f'<div class="selection-result">Selected retailer: {retailer_option}</div>', unsafe_allow_html=True)
+
+    # st.markdown(f'<div class="selection-result">Selected retailer: {retailer_option}</div>', unsafe_allow_html=True)
     # Fetch branches dynamically based on selected provider
     response_branches = requests.get(f"{BASE_URL}/{retailer_option}/get_branch")
 
@@ -127,12 +127,13 @@ if retailer_option and retailer_option != "Error fetching providers":
     else:
         branch_options = ["No branches found"]
 
-    st.markdown('<div class="selection-header" style="margin-top: 1rem;">Select Branch Location</div>', unsafe_allow_html=True)
+    st.markdown('<div class="selection-header" style="margin-top: 1rem;">Select Branch Location</div>',
+                unsafe_allow_html=True)
     selected_branch = st.selectbox("Choose a Branch:", branch_options, label_visibility="collapsed")
     st.session_state.branch = selected_branch
-    
-    #if selected_branch:
-        #st.markdown(f'<div class="selection-result">Selected branch: {selected_branch}</div>', unsafe_allow_html=True)
+
+    # if selected_branch:
+    # st.markdown(f'<div class="selection-result">Selected branch: {selected_branch}</div>', unsafe_allow_html=True)
 
 st.markdown('</div>', unsafe_allow_html=True)
 
@@ -146,4 +147,3 @@ with col2:
     if st.button("🛒 View Cart"):
         st.switch_page("pages/Cart_dashboard.py")
     st.markdown('</div>', unsafe_allow_html=True)
-

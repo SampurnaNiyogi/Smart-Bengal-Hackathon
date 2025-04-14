@@ -19,8 +19,6 @@ from reportlab.lib.units import mm
 from reportlab.platypus import Table, TableStyle, SimpleDocTemplate, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet
 
-
-
 # Load environment variables from .env
 load_dotenv()
 service_account_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
@@ -34,7 +32,6 @@ if not firebase_admin._apps:
     firebase_admin.initialize_app(cred)
 
 db = firestore.client()
-
 
 BASE_URL = "http://127.0.0.1:5000"
 
@@ -54,7 +51,6 @@ user_id = st.session_state["user_name"]
 user_email = "debnathaditya007@gmail.com"
 payload = st.session_state["checkout_payload"]
 
-
 # Get reference to the Firestore document
 doc_ref = db.collection('orders').document(user_id)
 
@@ -68,7 +64,6 @@ history_data = {}
 if doc.exists:
     data = doc.to_dict()
     history_data = data.get('history', {})  # Store just the 'history' part
-
 
 # Fake UI
 st.markdown("""
@@ -99,17 +94,12 @@ if "user_name" not in st.session_state or "checkout_payload" not in st.session_s
     st.error("⚠️ Missing user session or checkout info.")
     st.stop()
 
-
 user_id = st.session_state["user_name"]
 
 checkout_payload = st.session_state["checkout_payload"]
 
 st.markdown("### Choose Payment Method")
 st.radio("Select one:", ["UPI", "Credit Card", "Net Banking", "Wallets"], horizontal=True)
-
-
-
-
 
 
 def send_invoice_email(recipient_email, pdf_path, history_data, user_name):
@@ -178,7 +168,6 @@ def send_invoice_email(recipient_email, pdf_path, history_data, user_name):
         smtp.send_message(msg)
 
 
-
 def generate_invoice(history_data, output_path="invoice.pdf"):
     doc = SimpleDocTemplate(output_path, pagesize=A4,
                             rightMargin=30, leftMargin=30,
@@ -232,7 +221,7 @@ def generate_invoice(history_data, output_path="invoice.pdf"):
 
 if st.button("💸 Pay Now", use_container_width=True):
     with st.spinner("Processing Payment..."):
-        time.sleep(3)  
+        time.sleep(3)
 
         response = requests.post(f"{BASE_URL}/{user_id}/final_checkout", json=checkout_payload)
 
@@ -241,7 +230,7 @@ if st.button("💸 Pay Now", use_container_width=True):
         send_invoice_email(user_email, "invoice.pdf", history_data, user_id)
 
         st.toast(f"📧 Invoice sent to {user_email}", icon="✅")
-        
+
         with open("invoice.pdf", "rb") as f:
             st.download_button(
                 label="⬇️ Download Your Invoice",
@@ -249,11 +238,11 @@ if st.button("💸 Pay Now", use_container_width=True):
                 file_name="invoice.pdf",
                 mime="application/pdf"
             )
-        
+
         st.success("🎉 Payment successful! Your order has been placed.")
         st.toast("🛍️ You can now view your order history.", icon="📦")
         time.sleep(10)
-        st.switch_page("pages/Customer_dashboard.py")  
+        st.switch_page("pages/Customer_dashboard.py")
     else:
         st.error("❌ Payment failed.")
         st.toast("⚠️ Please try again.")

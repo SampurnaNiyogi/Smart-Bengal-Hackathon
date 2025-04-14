@@ -5,9 +5,7 @@ from firebase_admin import credentials, firestore
 from dotenv import load_dotenv
 import os
 
-
 from datetime import datetime
-
 
 # Load environment variables from .env
 load_dotenv()
@@ -28,7 +26,7 @@ db = firestore.client()
 app = Flask(__name__)
 
 
-#Firestore connection
+# Firestore connection
 @app.get('/test_firestore')
 def test_firestore():
     try:
@@ -62,7 +60,7 @@ def get_branches(provider):
     return jsonify(branch_names)
 
 
-#Get Product
+# Get Product
 @app.get('/<provider>/<branch>/<product_name>/get_product')
 def get_product(provider, branch, product_name):
     doc_ref = db.collection("provider").document(provider)
@@ -73,17 +71,17 @@ def get_product(provider, branch, product_name):
 
     data = doc.to_dict()
     try:
-        product_data = data[branch][product_name]    #{'product_name' : {quantity: int , price: float}}
-        return jsonify(product_data)  #{quantity: int , price: float}
+        product_data = data[branch][product_name]  # {'product_name' : {quantity: int , price: float}}
+        return jsonify(product_data)  # {quantity: int , price: float}
     except KeyError:
         return jsonify({"error": "Product not found"}), 404
 
 
-#Add to cart
+# Add to cart
 @app.post('/<retail>/<branch>/<user_id>/add_to_cart')
-def add_to_cart(user_id,retail,branch):
+def add_to_cart(user_id, retail, branch):
     data = request.json  # Expected: {"product_name": "apple", "quantity": 2, ...}
-    
+
     product_ref = db.collection("provider").document(retail)
     current_product = product_ref.get().to_dict() or {}
 
@@ -92,7 +90,7 @@ def add_to_cart(user_id,retail,branch):
 
     # Add or update product in the cart
     product_name = data.get("product_name")
-    
+
     try:
         current_stock = current_product[branch][product_name]['quantity']
         product_price = current_product[branch][product_name]['price']
@@ -101,7 +99,7 @@ def add_to_cart(user_id,retail,branch):
 
     if current_stock < data['quantity']:
         return jsonify({"error": "Not enough stock available"}), 404
-    
+
     if not product_name:
         return jsonify({"error": "Product name is required"}), 400
 
@@ -114,13 +112,13 @@ def add_to_cart(user_id,retail,branch):
             "price": product_price
 
         }
-    current_product[branch][product_name]['quantity'] -=  data.get("quantity", 1)
+    current_product[branch][product_name]['quantity'] -= data.get("quantity", 1)
     product_ref.update({f"{branch}.{product_name}.quantity": current_stock - data.get("quantity")})
     cart_ref.set(current_cart)
     return jsonify({"message": f"{product_name} added to cart"})
 
 
-#View Cart Details
+# View Cart Details
 @app.get('/<user_id>/get_cart')
 def get_cart(user_id):
     cart_ref = db.collection("carts").document(user_id)
@@ -191,10 +189,11 @@ def checkout(user_id):
             return jsonify({
                 "error": f"Only {stock} '{product}' available in stock."
             }), 400
-    
+
         return jsonify({"message": "Checkout successful!"})
 
-#After checkout with payment
+
+# After checkout with payment
 @app.post('/<user_id>/final_checkout')
 def final_checkout(user_id):
     data = request.json

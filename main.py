@@ -11,7 +11,7 @@ st.set_page_config(page_title="Cashier-Less Retail Shop", page_icon="🛒")
 # """, unsafe_allow_html=True)
 
 
-st.image("assets/logo2.jpg", width = 120)
+st.image("assets/logo2.jpg", width=120)
 
 st.title("Cashier-Less Retail Shop")
 
@@ -70,10 +70,10 @@ time.sleep(1)
 loading_placeholder.empty()
 status_text.empty()
 
-
-
 # Display Welcome Message
-st.markdown("<h3 style='text-align: center; color: #2ecc71;'>Welcome! Get ready for a seamless shopping experience.</h3>", unsafe_allow_html=True)
+st.markdown(
+    "<h3 style='text-align: center; color: #2ecc71;'>Welcome! Get ready for a seamless shopping experience.</h3>",
+    unsafe_allow_html=True)
 time.sleep(1)
 
 # Ensure the button appears correctly
