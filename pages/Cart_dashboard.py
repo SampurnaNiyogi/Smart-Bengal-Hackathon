@@ -99,6 +99,8 @@ if response.status_code == 200:
             st.rerun()
         if st.button("Return to Search 🔍"):
             st.switch_page("pages/Search_dashboard.py")
-           
+          
 else:
     st.error("❌ Failed to fetch cart.")
+if st.button("Return to Search 🔍"):
+            st.switch_page("pages/Search_dashboard.py")
