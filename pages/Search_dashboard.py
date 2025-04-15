@@ -170,8 +170,9 @@ def scan_barcode_streamlit():
     scanned_id = ""
     cap = cv2.VideoCapture(0)
     FRAME_WINDOW = st.image([])
-
-    st.info("Scanning... Show the barcode to your webcam", icon='📸')
+    
+    status_placeholder = st.empty()
+    status_placeholder.info("📸 Scanning... Show the barcode to your webcam")
 
     # Use session state to track cancel
     if "cancel_scan" not in st.session_state:
@@ -193,7 +194,7 @@ def scan_barcode_streamlit():
         # Decode only 2 types of barcodes used in retail
         decoded_objects = decode(frame, symbols=[ZBarSymbol.EAN8, ZBarSymbol.EAN13])
         if decoded_objects:
-            scanned_id = decoded_objects[0].data.decode('utf-8')
+            scanned_id = decoded_objects[0].data.decode('utf-8').strip()
             break
 
         # Flip the frame horizontally
@@ -204,12 +205,15 @@ def scan_barcode_streamlit():
     cap.release()
     cv2.destroyAllWindows()
     st.session_state["cancel_scan"] = False
+    status_placeholder.empty()
     return scanned_id
 
 
 # Scan Button
 if st.button("📷 Scan Barcode"):
     product_id = scan_barcode_streamlit()
+
+
     if product_id:
         st.success(f"✅ Scanned: {product_id}")
         st.session_state["scan_time"] = time.time()
@@ -220,6 +224,7 @@ if st.button("📷 Scan Barcode"):
             if response.status_code == 200:
                 product_data = response.json()
                 st.session_state["scanned_product"] = product_data["product_name"]
+                
             else:
                 st.error("❌ Product not found for this barcode.")
         except Exception as e:
