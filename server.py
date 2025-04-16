@@ -382,7 +382,8 @@ def send_invoice_email(user_id):
         <body style="font-family: Arial, sans-serif; line-height: 1.6;">
             <h2 style="color: #4CAF50;">Thanks for your order, {formatted_name}! 🛍️</h2>
             <p>Hi {formatted_name},</p>
-            <p>We appreciate your purchase at <strong>Demo Branch</strong>. Your invoice is attached to this email.</p>
+            <p>We appreciate your purchase at <strong>{provider}, {branch} branch</strong>. 
+            Your invoice is attached to this email.</p>
             <h3>🧾 Order Summary:</h3>
             <p>Date: {date}</p>
             <p>Time: {time}</p>
@@ -457,7 +458,7 @@ def generate_invoice(user_id, output_path="invoice.pdf"):
         alignment=TA_CENTER,
         fontSize=12,
     )
-    story = [
+    content = [
         # Title
         Paragraph("<b>TRANSACTION INVOICE</b>", styles["Title"]), Spacer(1, 5),
         # Customer section
@@ -471,6 +472,7 @@ def generate_invoice(user_id, output_path="invoice.pdf"):
                "Rs. {price:.2f}".format(price=details['price'])]
         data.append(row)
 
+    data.append(['Total', '', "Rs. {price:.2f}".format(price=total)])
     table = Table(data, colWidths=[100, 100, 100])
     table.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#1F2937")),
@@ -481,20 +483,21 @@ def generate_invoice(user_id, output_path="invoice.pdf"):
         ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#F3F4F6')),
         ('BOX', (0, 0), (-1, -1), 1, colors.black),
         ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+        # This is for total
+        ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
+        ('SPAN', (0, -1), (-2, -1))
     ]))
-    story.append(table)
-    story.append(Spacer(1, 12))
+    content.append(table)
+    content.append(Spacer(1, 12))
 
-    story.append(Paragraph("<b>Total:</b> Rs. {price:.2f}".format(price=total),
-                           styles["Normal"]))
-    story.append(Spacer(1, 24))
+    content.append(Spacer(1, 24))
 
     # Footer
-    story.append(Paragraph(f"<i>Generated on {date}, {time}</i>",
-                           styles["Normal"]))
-    story.append(Paragraph("<b>Thank you for shopping with us!</b>", styles["Normal"]))
+    content.append(Paragraph(f"<i>Generated on {date}, {time}</i>",
+                             styles["Normal"]))
+    content.append(Paragraph("<b>Thank you for shopping with us!</b>", styles["Normal"]))
 
-    doc.build(story)
+    doc.build(content)
     return jsonify("message")
 
 
