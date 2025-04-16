@@ -348,7 +348,6 @@ def get_dt_from_millis(timestamp: float) -> (str, str):
 def send_invoice_email(user_id):
     # Fethched from user_email
     req_data = request.json
-    print("What do we have here: \n\t", req_data)
     order = req_data.get('order')
     items, timestamp, total = order.values()
     provider = req_data['provider']
