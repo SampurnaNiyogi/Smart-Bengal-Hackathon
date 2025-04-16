@@ -336,6 +336,7 @@ def final_checkout(user_id):
     return jsonify({"message": "Ordered successfully!", "order": order_data})
 
 
+# Converts milliseconds to an object containing date and time
 def get_dt_from_millis(timestamp: float) -> (str, str):
     curr_dt = datetime.fromtimestamp(timestamp)
     time = curr_dt.strftime("%X")
@@ -355,13 +356,17 @@ def send_invoice_email(user_id):
 
     # Converting millisecs back to datetime
     date, time = get_dt_from_millis(timestamp)
-    # For testing purposes, using a hardcoded email
-    # In a real-world scenario, you would fetch this from the user's profile
-    # or session
-    user_email = "mrcodes06@gmail.com"
     pdf_path = "invoice.pdf"
-    EMAIL_SENDER = "debnathaditya2005@gmail.com"
-    EMAIL_PASSWORD = "wpngulalndxhywjg"
+
+    # Get sender email, user email and sender's email password
+    # from .env file
+    user_email = os.getenv('USER_EMAIL')
+    EMAIL_SENDER = os.getenv('SENDER_EMAIL')
+    EMAIL_PASSWORD = os.getenv('SENDER_PASSWORD')
+    if not EMAIL_SENDER or not EMAIL_PASSWORD:
+        return jsonify({'error': 'Missing sender email credentials'}), 500
+    if not user_email:
+        return jsonify({'error': 'Missing user email'}), 400
     # Set up email credentials
     msg = EmailMessage()
     msg['Subject'] = f"🧾 Your Invoice from {provider},  {branch} branch"

@@ -1,25 +1,7 @@
-import os
 import time
 
-import firebase_admin
 import requests
 import streamlit as st
-from dotenv import load_dotenv
-from firebase_admin import credentials, firestore
-
-# Load environment variables from .env
-load_dotenv()
-service_account_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
-
-if not service_account_path:
-    raise ValueError("GOOGLE_APPLICATION_CREDENTIALS is not set in the .env file")
-
-# Initialize Firebase only if not already initialized
-if not firebase_admin._apps:
-    cred = credentials.Certificate(service_account_path)
-    firebase_admin.initialize_app(cred)
-
-db = firestore.client()
 
 BASE_URL = "http://127.0.0.1:5000"
 
