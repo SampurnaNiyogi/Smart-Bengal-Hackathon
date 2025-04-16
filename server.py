@@ -1,26 +1,20 @@
-from flask import Flask, request, jsonify
-import firebase_admin
-from firebase_admin import credentials, firestore
-import re
-
-from dotenv import load_dotenv
 import os
-
-from datetime import datetime
-
-from reportlab.lib.pagesizes import A4
-from reportlab.pdfgen import canvas
-from datetime import datetime
-
+import random
+import re
 import smtplib
+import uuid
+from datetime import datetime
 from email.message import EmailMessage
 
+import firebase_admin
+from dotenv import load_dotenv
+from firebase_admin import credentials, firestore
+from flask import Flask, request, jsonify
 from reportlab.lib import colors
-from reportlab.lib.units import mm
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import Table, TableStyle, SimpleDocTemplate, Paragraph, Spacer
-from reportlab.lib.styles import getSampleStyleSheet
-import uuid
-import random
+from reportlab.lib.enums import TA_CENTER
 
 # Load environment variables from .env
 load_dotenv()
@@ -74,7 +68,7 @@ def validate_name_email(name: str, email: str) -> str:
     if not email_regex.match(email):
         return "Email address is not valid"
 
-    return None  # No errors found
+    return ""  # No errors found
 
 
 @app.post("/add_user")
@@ -267,7 +261,7 @@ def update_cart_item(user_id):
 
 @app.post('/<user_id>/checkout')
 def checkout(user_id):
-    data = request.json
+    data = request.json()
 
     provider = data.get("provider", "")
     branch = data.get("branch", "")
@@ -316,17 +310,16 @@ def final_checkout(user_id):
     # Fetch cart
     cart_ref = db.collection("carts").document(user_id)
     cart = cart_ref.get().to_dict()
-
     if not cart:
         return jsonify({"error": "Cart is empty"}), 400
 
     # Finalize order (assumes stock already adjusted earlier)
     total = sum(item["price"] * item["quantity"] for item in cart.values())
-    timeStamp = datetime.utcnow()
+    timestamp = datetime.now().timestamp()
     order_data = {
         "items": cart,
         "total": total,
-        "timestamp": timeStamp
+        "timestamp": timestamp
     }
 
     # Save to order history
@@ -334,39 +327,51 @@ def final_checkout(user_id):
     curr_order = order_ref.get().to_dict() or {}
     if 'history' not in curr_order:
         curr_order['history'] = {}
-    curr_order['history'][str(timeStamp)] = order_data
+    curr_order['history'][str(timestamp)] = order_data
 
     # Write and clear
     order_ref.set(curr_order)
     cart_ref.delete()
 
-    return jsonify({"message": "Ordered successful!y", "order": order_data})
+    return jsonify({"message": "Ordered successfully!", "order": order_data})
+
+
+def get_dt_from_millis(timestamp: float) -> (str, str):
+    curr_dt = datetime.fromtimestamp(timestamp)
+    time = curr_dt.strftime("%X")
+    date = curr_dt.strftime("%A, %d/%m/%Y")
+    return date, time
 
 
 @app.post('/<user_id>/send_invoice_email')
 def send_invoice_email(user_id):
-    # Fethched from user_email 
+    # Fethched from user_email
+    req_data = request.json
+    print("What do we have here: \n\t", req_data)
+    order = req_data.get('order')
+    items, timestamp, total = order.values()
+    provider = req_data['provider']
+    branch = req_data['branch']
 
+    # Converting millisecs back to datetime
+    date, time = get_dt_from_millis(timestamp)
     # For testing purposes, using a hardcoded email
     # In a real-world scenario, you would fetch this from the user's profile
     # or session
-    user_email = "debnathaditya007@gmail.com"
+    user_email = "mrcodes06@gmail.com"
     pdf_path = "invoice.pdf"
     EMAIL_SENDER = "debnathaditya2005@gmail.com"
     EMAIL_PASSWORD = "wpngulalndxhywjg"
-    doc_ref = db.collection('orders').document(user_id)  # Get reference to the Firestore document
-    doc = doc_ref.get()  # Fetch the document
-    if doc.exists:
-        data = doc.to_dict()
-        history_data = data.get('history', {})  # Store just the 'history' part
+    # Set up email credentials
     msg = EmailMessage()
-    msg['Subject'] = "🧾 Your Invoice from Demo Branch"
+    msg['Subject'] = f"🧾 Your Invoice from {provider},  {branch} branch"
     msg['From'] = EMAIL_SENDER
     msg['To'] = user_email
 
     # Capitalize user name for display
     formatted_name = user_id.capitalize()
 
+    # The real juice
     html = f"""
     <html>
         <body style="font-family: Arial, sans-serif; line-height: 1.6;">
@@ -374,38 +379,40 @@ def send_invoice_email(user_id):
             <p>Hi {formatted_name},</p>
             <p>We appreciate your purchase at <strong>Demo Branch</strong>. Your invoice is attached to this email.</p>
             <h3>🧾 Order Summary:</h3>
+            <p>Date: {date}</p>
+            <p>Time: {time}</p>
             <table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse;">
                 <tr style="background-color: #f2f2f2;">
-                    <th>Date</th>
                     <th>Item</th>
                     <th>Quantity</th>
                     <th>Price</th>
                 </tr>
     """
 
-    for ts, record in history_data.items():
-        for item, details in record['items'].items():
-            html += f"""
-                <tr>
-                    <td>{record['timestamp']}</td>
-                    <td>{item.title()}</td>
-                    <td>{details['quantity']}</td>
-                    <td>₹{details['price']}</td>
-                </tr>
-            """
+    for item, details in items.items():
+        price_formatted = '{price:.2f}'.format(price=details['price'])
         html += f"""
             <tr>
-                <td colspan="3" align="right"><strong>Total:</strong></td>
-                <td><strong>₹{record['total']}</strong></td>
+                <td>{item.title()}</td>
+                <td>{details['quantity']}</td>
+                <td>Rs. {price_formatted}</td>
             </tr>
         """
 
-    html += """
+    total_formatted = '{total:.2f}'.format(total=total)
+    html += f"""
+        <tr>
+            <td colspan="2" align="left"><strong>Total:</strong></td>
+            <td><strong>Rs. {total_formatted}</strong></td>
+        </tr>
+    """
+
+    html += f"""
             </table>
             <p>If you have any questions, feel free to reply to this email.</p>
             <br>
             <p>Warm regards,</p>
-            <p><strong>Demo Branch Team</strong></p>
+            <p><strong>{provider} Team, {branch} Branch</strong></p>
         </body>
     </html>
     """
@@ -419,68 +426,67 @@ def send_invoice_email(user_id):
     with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
         smtp.login(EMAIL_SENDER, EMAIL_PASSWORD)
         smtp.send_message(msg)
-    return jsonify({"message": "Invoice Email sent successful!"})
+    return jsonify({"message": "Invoice Email sent successfully!"})
 
 
 @app.post('/<user_id>/generate_invoice')
 def generate_invoice(user_id, output_path="invoice.pdf"):
-    # Fethched from user_email 
-
+    req_data = request.json
+    order = req_data.get('order')
+    items, timestamp, total = order.values()
+    date, time = get_dt_from_millis(timestamp)
+    provider = req_data['provider']
+    branch = req_data['branch']
     # For testing purposes, using a hardcoded email
     # In a real-world scenario, you would fetch this from the user's profile
     # or session
-    user_email = "debnathaditya007@gmail.com"
-
-    doc_ref = db.collection('orders').document(user_id)  # Get reference to the Firestore document
-    doc = doc_ref.get()  # Fetch the document
-    if doc.exists:
-        data = doc.to_dict()
-        history_data = data.get('history', {})  # Store just the 'history' part
+    user_email = req_data['email']
     doc = SimpleDocTemplate(output_path, pagesize=A4,
-                            rightMargin=30, leftMargin=30,
-                            topMargin=30, bottomMargin=18)
+                            rightMargin=50, leftMargin=50,
+                            topMargin=50, bottomMargin=50)
 
     styles = getSampleStyleSheet()
-    story = []
+    centered_style = ParagraphStyle(
+        name="Centered",
+        parent=styles['Normal'],
+        alignment=TA_CENTER,
+        fontSize=12,
+    )
+    story = [
+        # Title
+        Paragraph("<b>TRANSACTION INVOICE</b>", styles["Title"]), Spacer(1, 5),
+        # Customer section
+        Paragraph(f"{provider}, {branch} branch", centered_style), Spacer(1, 12),
+        Paragraph(f"<b>Customer:</b> {user_id}", styles["Normal"]),
+        Paragraph(f"<b>Email:</b> {user_email}", styles["Normal"]), Spacer(1, 12)]
 
-    # Title
-    story.append(Paragraph("<b>🧾 DEMO BRANCH INVOICE</b>", styles["Title"]))
+    data = [["Item", "Quantity", "Price"]]
+    for item_name, details in items.items():
+        row = [item_name.title(), str(details['quantity']),
+               "Rs. {price:.2f}".format(price=details['price'])]
+        data.append(row)
+
+    table = Table(data, colWidths=[100, 100, 100])
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#1F2937")),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#F3F4F6')),
+        ('BOX', (0, 0), (-1, -1), 1, colors.black),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+    ]))
+    story.append(table)
     story.append(Spacer(1, 12))
 
-    # Customer section
-    story.append(Paragraph(f"<b>Customer:</b> {user_id}", styles["Normal"]))
-    story.append(Paragraph(f"<b>Email:</b> {user_email}", styles["Normal"]))
-    story.append(Spacer(1, 12))
-
-    for idx, (timestamp, record) in enumerate(history_data.items(), start=1):
-        story.append(Paragraph(f"<b>🗓️ Transaction {idx}:</b> {timestamp}", styles["Heading4"]))
-        story.append(Spacer(1, 6))
-
-        data = [["Item", "Quantity", "Price"]]
-        for item_name, details in record['items'].items():
-            row = [item_name.title(), str(details["quantity"]), f"₹{details['price']}"]
-            data.append(row)
-
-        table = Table(data, colWidths=[100, 100, 100])
-        table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#2E5077")),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
-            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-            ('BOX', (0, 0), (-1, -1), 1, colors.black),
-            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
-        ]))
-        story.append(table)
-        story.append(Spacer(1, 12))
-
-        story.append(Paragraph(f"<b>Total:</b> ₹{record['total']}", styles["Normal"]))
-        story.append(Spacer(1, 24))
+    story.append(Paragraph("<b>Total:</b> Rs. {price:.2f}".format(price=total),
+                           styles["Normal"]))
+    story.append(Spacer(1, 24))
 
     # Footer
-    now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    story.append(Paragraph(f"<i>Generated on {now}</i>", styles["Normal"]))
+    story.append(Paragraph(f"<i>Generated on {date}, {time}</i>",
+                           styles["Normal"]))
     story.append(Paragraph("<b>Thank you for shopping with us!</b>", styles["Normal"]))
 
     doc.build(story)

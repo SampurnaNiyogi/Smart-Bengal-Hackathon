@@ -1,10 +1,11 @@
 import streamlit as st
 import streamlit.components.v1 as components
 
-def render_store_map():
-    st.subheader("🛒 Store Layout")
 
-    store_grid_html = """
+def render_store_map():
+	st.subheader("🛒 Store Layout")
+
+	store_grid_html = """
     <style>
     .store-grid {
         display: grid;
@@ -62,4 +63,4 @@ def render_store_map():
     </div>
     """
 
-    components.html(store_grid_html, height=350)
+	components.html(store_grid_html, height=350)

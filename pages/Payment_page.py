@@ -1,23 +1,11 @@
-import streamlit as st
 import os
 import time
-import requests
+
 import firebase_admin
-from firebase_admin import credentials, firestore
-
+import requests
+import streamlit as st
 from dotenv import load_dotenv
-
-from reportlab.lib.pagesizes import A4
-from reportlab.pdfgen import canvas
-from datetime import datetime
-
-import smtplib
-from email.message import EmailMessage
-
-from reportlab.lib import colors
-from reportlab.lib.units import mm
-from reportlab.platypus import Table, TableStyle, SimpleDocTemplate, Paragraph, Spacer
-from reportlab.lib.styles import getSampleStyleSheet
+from firebase_admin import credentials, firestore
 
 # Load environment variables from .env
 load_dotenv()
@@ -74,9 +62,8 @@ if "user_name" not in st.session_state or "checkout_payload" not in st.session_s
     st.stop()
 
 user_id = st.session_state["user_name"]
-
+user_email = st.session_state['user_email']
 checkout_payload = st.session_state["checkout_payload"]
-
 st.markdown("### Choose Payment Method")
 st.radio("Select one:", ["UPI", "Credit Card", "Net Banking", "Wallets"], horizontal=True)
 
@@ -86,9 +73,11 @@ if st.button("💸 Pay Now", use_container_width=True):
         time.sleep(3)
 
         response = requests.post(f"{BASE_URL}/{user_id}/final_checkout", json=checkout_payload)
-
+        # Contains email, cart details, timestamp, provider and branch
+        invoice_payload = {'email': user_email, **(response.json()), **checkout_payload}
     if response.status_code == 200:
-        invoice_generate = requests.post(f'{BASE_URL}/{user_id}/generate_invoice')
+        invoice_generate = requests.post(f'{BASE_URL}/{user_id}/generate_invoice',
+                                         json=invoice_payload)
         if invoice_generate.status_code == 200:
             with open("invoice.pdf", "rb") as f:
                 st.download_button(
@@ -100,7 +89,7 @@ if st.button("💸 Pay Now", use_container_width=True):
         else: 
             st.error("Error generating invoice")
 
-        invoice_send = requests.post(f"{BASE_URL}/{user_id}/send_invoice_email")
+        invoice_send = requests.post(f"{BASE_URL}/{user_id}/send_invoice_email", json=invoice_payload)
         if invoice_send.status_code == 200:
             st.success(f"✅ Invoice Email Sent")
             st.toast(f"📧 Invoice sent to {user_id}'s email", icon="✅")

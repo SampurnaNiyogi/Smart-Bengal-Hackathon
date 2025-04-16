@@ -5,3 +5,5 @@ flask
 requests
 python-dotenv
 reportlab
+opencv-python
+pyzbar
