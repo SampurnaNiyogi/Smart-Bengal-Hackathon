@@ -15,8 +15,6 @@ st.image("assets/logo2.jpg", width=120)
 
 st.title("Cashier-Less Retail Shop")
 
-import streamlit as st
-
 st.markdown("""
     <style>
     /* Sidebar container */
