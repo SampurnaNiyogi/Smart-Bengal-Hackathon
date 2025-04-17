@@ -70,6 +70,7 @@ if response.status_code == 200:
                             )
                             if update.status_code == 200:
                                 st.success(f"✅ {product.title()} updated successfully!")
+                                time.sleep(1)
                                 st.rerun()
                             else:
                                 st.error("❌ Failed to update cart.")

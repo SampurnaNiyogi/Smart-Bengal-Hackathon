@@ -294,6 +294,7 @@ if product_name:
                             )
                             if add_response.status_code == 200:
                                 st.success(f"✅ {product_name.title()} added to cart!")
+                                time.sleep(1)
                                 st.session_state.pop("scanned_product", None)
                                 st.rerun()
                             else:
