@@ -104,8 +104,8 @@ def login_user():
     data = request.get_json()  # Get data from request
 
     # Extract name and email
-    name = data.get('name')
-    email = data.get('email')
+    name = data.get('name').strip()
+    email = data.get('email').strip()
 
     # Validate inputs
     validation_error = validate_name_email(name, email)

@@ -4,16 +4,87 @@ import time
 st.set_page_config(page_title="Cashier-Less Retail Shop", page_icon="🛒")
 
 # Optional: Add a brand logo
-# st.markdown("""
-# <div style="text-align: center;">
-#     <img src="assets/logo.jpg" alt="Store Logo" width="120">
-# </div>
-# """, unsafe_allow_html=True)
+st.markdown("""
+<div style="text-align: center;">
+    <img src="assets/logo.jpg" alt="Store Logo" width="120">
+</div>
+""", unsafe_allow_html=True)
 
 
 st.image("assets/logo2.jpg", width=120)
 
 st.title("Cashier-Less Retail Shop")
+
+import streamlit as st
+
+st.markdown("""
+    <style>
+    /* Sidebar container */
+    [data-testid="stSidebar"] {
+        background-color: #0f1117;
+        padding-top: 2rem;
+    }
+
+    /* Nav list */
+    [data-testid="stSidebarNav"] > ul {
+        padding-left: 0;
+    }
+
+    /* Nav items */
+    [data-testid="stSidebarNav"] li {
+        list-style-type: none;
+        margin-bottom: 10px;
+        border-radius: 10px;
+        transition: all 0.3s ease;
+    }
+
+    [data-testid="stSidebarNav"] li a {
+        color: #cfcfcf;
+        font-size: 1rem;
+        padding: 0.6rem 1rem;
+        display: block;
+        text-decoration: none;
+    }
+
+    [data-testid="stSidebarNav"] li:hover {
+        background-color: #262a35;
+    }
+
+    /* Highlight for each page */
+    [data-testid="stSidebarNav"] a[href$="/🏠_Main"] {
+        background-color: #4b5563;
+        font-weight: bold;
+        color: white;
+    }
+    [data-testid="stSidebarNav"] a[href$="/🛒_Cart_Dashboard"] {
+        background-color: #4a4a70;
+        font-weight: bold;
+        color: white;
+    }
+    [data-testid="stSidebarNav"] a[href$="/👤_Customer_Dashboard"] {
+        background-color: #3f3f7d;
+        font-weight: bold;
+        color: white;
+    }
+    [data-testid="stSidebarNav"] a[href$="/🔐_Login"] {
+        background-color: #374151;
+        font-weight: bold;
+        color: white;
+    }
+    [data-testid="stSidebarNav"] a[href$="/💳_Payment_Page"] {
+        background-color: #3b3c5a;
+        font-weight: bold;
+        color: white;
+    }
+    [data-testid="stSidebarNav"] a[href$="/🔍_Search_Dashboard"] {
+        background-color: #2f3d4f;
+        font-weight: bold;
+        color: white;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+
 
 # Custom Button Styling
 st.markdown("""
