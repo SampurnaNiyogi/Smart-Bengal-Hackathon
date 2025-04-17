@@ -84,7 +84,7 @@ st.markdown("""
     
     .add-button {
         background-color: #27ae60 !important;
-        color: white !important;
+        color: #E8C999 !important;
         border: none !important;
         padding: 0.5rem 1rem !important;
         font-weight: 500 !important;

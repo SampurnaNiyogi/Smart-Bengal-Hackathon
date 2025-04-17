@@ -16,6 +16,7 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import Table, TableStyle, SimpleDocTemplate, Paragraph, Spacer
 from reportlab.lib.enums import TA_CENTER
 
+from  urllib.parse import unquote
 # Load environment variables from .env
 load_dotenv()
 
@@ -236,10 +237,20 @@ def get_cart(user_id):
 
 @app.post('/<user_id>/update_cart_item')
 def update_cart_item(user_id):
-    data = request.json  # expects: { "product_name": "bread", "quantity": 3 }
+    data = request.json  # expects: {"provider": JioMart, "branch": Salt Lake, "product_details":{ "product_name": "bread", "quantity": 3 }}
 
-    product = data.get("product_name")
-    new_qty = data.get("quantity")
+    product = data["product_details"]["product_name"]
+    new_qty = data["product_details"]["quantity"]
+    provider = data.get("provider")
+    branch = data.get("branch")
+    branch = unquote(data.get("branch"))
+    #get provider database reference
+    provider_ref = db.collection("provider").document(provider)
+    provider_update=provider_ref.get().to_dict() or {}
+    try:
+        current_stock = provider_update[branch][product]['quantity']
+    except KeyError as e:
+        return jsonify({"error": "Missing product or quantity"}), 404
 
     if not product or new_qty is None:
         return jsonify({"error": "Missing product or quantity"}), 400
@@ -252,9 +263,15 @@ def update_cart_item(user_id):
 
     if new_qty <= 0:
         del cart[product]  # remove item
+        provider_update[branch][product]["quantity"] += cart[product]["quantity"]
     else:
+        if cart[product]["quantity"] > new_qty:
+            provider_update[branch][product]["quantity"] += (cart[product]["quantity"] - new_qty)
+            provider_ref.update({f"{branch}.{product}.quantity":  current_stock + (cart[product]["quantity"] - new_qty)})
+        else:
+            provider_update[branch][product]["quantity"] -= (new_qty - cart[product]["quantity"])
+            provider_ref.update({f"{branch}.{product}.quantity":  current_stock - (new_qty - cart[product]["quantity"])})
         cart[product]["quantity"] = new_qty
-
     cart_ref.set(cart)
     return jsonify({"message": "Cart updated"})
 
@@ -293,7 +310,6 @@ def checkout(user_id):
             return jsonify({
                 "error": f"Only {stock} '{product}' available in stock."
             }), 400
-
         return jsonify({"message": "Checkout successful!"})
 
 

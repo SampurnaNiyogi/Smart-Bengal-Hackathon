@@ -96,7 +96,7 @@ def apply_custom_css():
         }
         .stButton > button:hover {
             background-color: #2980b9;
-            color: white;
+            color: #E8C999 !important;
             transform: translateY(-2px);
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }

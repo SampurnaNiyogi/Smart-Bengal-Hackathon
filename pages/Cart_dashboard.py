@@ -66,7 +66,7 @@ if response.status_code == 200:
                         if st.button(f"Update {product}", key=f"btn_{product}"):
                             update = requests.post(
                                 f"{BASE_URL}/{user_id}/update_cart_item",
-                                json={"product_name": product, "quantity": new_qty}
+                                json={"provider": provider, "branch": encoded_branch, "product_details":{"product_name": product, "quantity": new_qty}}
                             )
                             if update.status_code == 200:
                                 st.success(f"✅ {product.title()} updated successfully!")
@@ -74,7 +74,7 @@ if response.status_code == 200:
                                 st.rerun()
                             else:
                                 st.error("❌ Failed to update cart.")
-
+                    
                 with col2:
                     item_total = new_qty * details['price']
                     st.markdown(f"### ₹{item_total:.2f}")

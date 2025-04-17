@@ -49,6 +49,12 @@ checkout_payload = st.session_state["checkout_payload"]
 st.markdown("### Choose Payment Method")
 st.radio("Select one:", ["UPI", "Credit Card", "Net Banking", "Wallets"], horizontal=True)
 
+if st.session_state.get("switch_to_home"):
+    with st.spinner("⏳ Redirecting to Cart dashboard..."):
+        time.sleep(2.5)
+    # Clear flag and switch page
+    st.session_state["switch_to_cart"] = False
+    st.switch_page("pages/Customer_dashboard.py")
 
 if st.button("💸 Pay Now", use_container_width=True):
     with st.spinner("Processing Payment..."):
@@ -72,25 +78,20 @@ if st.button("💸 Pay Now", use_container_width=True):
             st.error("Error generating invoice")
 
         invoice_send = requests.post(f"{BASE_URL}/{user_id}/send_invoice_email", json=invoice_payload)
+        st.success("🎉 Payment successful! Your order has been placed.")
         if invoice_send.status_code == 200:
             st.success(f"✅ Invoice Email Sent")
             st.toast(f"📧 Invoice sent to {user_id}'s email", icon="✅")
-            st.rerun()
         else: 
             st.error("Error Sending Invoice Email")
 
-        st.success("🎉 Payment successful! Your order has been placed.")
         st.toast("🛍️ You can now view your order history.", icon="📦")
-        
-        with st.spinner("⏳ Returning to Cart dashboard..."):
-            time.sleep(2.5)  # Delay for effect
-            st.rerun()
-        st.switch_page("pages/Cart_dashboard.py")
-    
+        time.sleep(2)
+        st.session_state["switch_to_home"] = True
+        st.rerun()
     else:
         st.error("❌ Payment failed.")
         st.toast("⚠️ Please try again.")
-        st.text(f"Reason: {response.text}")
 if st.button("Cancel Payment", use_container_width=True):
     with st.spinner("Returning to Cart....."):
         time.sleep(4)

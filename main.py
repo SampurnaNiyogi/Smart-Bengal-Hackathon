@@ -29,7 +29,9 @@ st.markdown("""
     }
     div.stButton > button:hover {
         background-color: #2980b9;
+        color:#E8C999 !important
     }
+    
 </style>
 """, unsafe_allow_html=True)
 
@@ -72,7 +74,7 @@ status_text.empty()
 
 # Display Welcome Message
 st.markdown(
-    "<h3 style='text-align: center; color: #2ecc71;'>Welcome! Get ready for a seamless shopping experience.</h3>",
+    "<h3 style='text-align: center; color: #9ACBD0;'>Welcome! Get ready for a seamless shopping experience.</h3>",
     unsafe_allow_html=True)
 time.sleep(1)
 
