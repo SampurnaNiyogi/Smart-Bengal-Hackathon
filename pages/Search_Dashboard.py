@@ -4,7 +4,8 @@ import urllib.parse
 import cv2
 from pyzbar.pyzbar import decode, ZBarSymbol
 import time
-
+import ctypes
+ctypes.cdll.LoadLibrary("/opt/homebrew/opt/zbar/lib/libzbar.dylib")
 # from store_map import render_store_map
 
 # # Navigation
