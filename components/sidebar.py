@@ -1,5 +1,6 @@
 import streamlit as st
 
+
 def vertical_navbar():
     st.markdown("""
     <style>

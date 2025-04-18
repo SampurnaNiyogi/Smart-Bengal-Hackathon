@@ -8,6 +8,7 @@ import time
 import platform
 import os
 import ctypes
+
 # Only for macOS
 if platform.system() == "Darwin":
     lib_path = "/opt/homebrew/opt/zbar/lib/libzbar.dylib"
@@ -15,7 +16,6 @@ if platform.system() == "Darwin":
         ctypes.cdll.LoadLibrary(lib_path)
     else:
         raise FileNotFoundError(f"ZBar library not found at {lib_path}")
-
 
 # from store_map import render_store_map
 
@@ -25,13 +25,9 @@ if platform.system() == "Darwin":
 #     render_store_map()
 
 
-
 # Hide default Streamlit sidebar & footer
 
 # Inject custom CSS to hide Streamlit's default UI
-
-
-
 
 
 # Custom CSS
@@ -167,7 +163,6 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-
 BASE_URL = "http://127.0.0.1:5000"
 
 # Title
@@ -192,7 +187,7 @@ def scan_barcode_streamlit():
     scanned_id = ""
     cap = cv2.VideoCapture(0)
     FRAME_WINDOW = st.image([])
-    
+
     status_placeholder = st.empty()
     status_placeholder.info("📸 Scanning... Show the barcode to your webcam")
 
@@ -237,7 +232,6 @@ def scan_barcode_streamlit():
 if st.button("📷 Scan Barcode"):
     product_id = scan_barcode_streamlit()
 
-
     if product_id:
         st.success(f"✅ Scanned: {product_id}")
         st.session_state["scan_time"] = time.time()
@@ -248,7 +242,7 @@ if st.button("📷 Scan Barcode"):
             if response.status_code == 200:
                 product_data = response.json()
                 st.session_state["scanned_product"] = product_data["product_name"]
-                
+
             else:
                 st.error("❌ Product not found for this barcode.")
         except Exception as e:
@@ -302,11 +296,11 @@ if product_name:
                             st.button("➕ Add to Cart", disabled=True)
                         else:
                             quantity = st.number_input("Quantity",
-                                                    min_value=1,
-                                                    max_value=product_details['quantity'],
-                                                    value=1,
-                                                    step=1,
-                                                    key="quantity_input")
+                                                       min_value=1,
+                                                       max_value=product_details['quantity'],
+                                                       value=1,
+                                                       step=1,
+                                                       key="quantity_input")
                             if st.button("➕ Add to Cart", use_container_width=True):
                                 user_id = st.session_state.get("user_name", "guest")
                                 add_response = requests.post(

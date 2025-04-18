@@ -1,3 +1,4 @@
+import base64
 import os
 import random
 import re
@@ -5,18 +6,20 @@ import smtplib
 import uuid
 from datetime import datetime
 from email.message import EmailMessage
+from io import BytesIO
 
 import firebase_admin
 from dotenv import load_dotenv
 from firebase_admin import credentials, firestore
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, Response
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import Table, TableStyle, SimpleDocTemplate, Paragraph, Spacer
 from reportlab.lib.enums import TA_CENTER
 
-from  urllib.parse import unquote
+from urllib.parse import unquote
+
 # Load environment variables from .env
 load_dotenv()
 
@@ -237,19 +240,19 @@ def get_cart(user_id):
 
 @app.post('/<user_id>/update_cart_item')
 def update_cart_item(user_id):
-    data = request.json  # expects: {"provider": JioMart, "branch": Salt Lake, "product_details":{ "product_name": "bread", "quantity": 3 }}
+    # expects: {"provider": JioMart, "branch": Salt Lake, "product_details":{ "product_name": "bread", "quantity": 3 }}
+    data = request.json
 
     product = data["product_details"]["product_name"]
     new_qty = data["product_details"]["quantity"]
     provider = data.get("provider")
-    branch = data.get("branch")
     branch = unquote(data.get("branch"))
-    #get provider database reference
+    # get provider database reference
     provider_ref = db.collection("provider").document(provider)
-    provider_update=provider_ref.get().to_dict() or {}
+    provider_update = provider_ref.get().to_dict() or {}
     try:
         current_stock = provider_update[branch][product]['quantity']
-    except KeyError as e:
+    except KeyError:
         return jsonify({"error": "Missing product or quantity"}), 404
 
     if not product or new_qty is None:
@@ -267,10 +270,10 @@ def update_cart_item(user_id):
     else:
         if cart[product]["quantity"] > new_qty:
             provider_update[branch][product]["quantity"] += (cart[product]["quantity"] - new_qty)
-            provider_ref.update({f"{branch}.{product}.quantity":  current_stock + (cart[product]["quantity"] - new_qty)})
+            provider_ref.update({f"{branch}.{product}.quantity": current_stock + (cart[product]["quantity"] - new_qty)})
         else:
             provider_update[branch][product]["quantity"] -= (new_qty - cart[product]["quantity"])
-            provider_ref.update({f"{branch}.{product}.quantity":  current_stock - (new_qty - cart[product]["quantity"])})
+            provider_ref.update({f"{branch}.{product}.quantity": current_stock - (new_qty - cart[product]["quantity"])})
         cart[product]["quantity"] = new_qty
     cart_ref.set(cart)
     return jsonify({"message": "Cart updated"})
@@ -362,8 +365,11 @@ def get_dt_from_millis(timestamp: float) -> (str, str):
 
 @app.post('/<user_id>/send_invoice_email')
 def send_invoice_email(user_id):
-    # Fethched from user_email
     req_data = request.json
+    pdf_bytes = generate_invoice(user_id, req_data)
+    if not pdf_bytes:
+        return jsonify({'error': "Can't generate invoice"}), 500
+
     order = req_data.get('order')
     items, timestamp, total = order.values()
     provider = req_data['provider']
@@ -441,28 +447,25 @@ def send_invoice_email(user_id):
     msg.set_content(f"Hi {formatted_name},\n\nThanks for your order! Your invoice is attached.\n\nDemo Branch")
     msg.add_alternative(html, subtype='html')
 
-    with open(pdf_path, 'rb') as f:
-        msg.add_attachment(f.read(), maintype='application', subtype='pdf', filename="invoice.pdf")
+    msg.add_attachment(pdf_bytes, maintype='application', subtype='pdf', filename="invoice.pdf")
 
     with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
         smtp.login(EMAIL_SENDER, EMAIL_PASSWORD)
         smtp.send_message(msg)
-    return jsonify({"message": "Invoice Email sent successfully!"})
+    return jsonify({'message': 'Email sent successfully!'})
 
 
-@app.post('/<user_id>/generate_invoice')
-def generate_invoice(user_id, output_path="invoice.pdf"):
-    req_data = request.json
+def generate_invoice(user_id, req_data) -> bytes:
+    # A buffer to store pdf file contents
+    buffer = BytesIO()
+
     order = req_data.get('order')
     items, timestamp, total = order.values()
     date, time = get_dt_from_millis(timestamp)
     provider = req_data['provider']
     branch = req_data['branch']
-    # For testing purposes, using a hardcoded email
-    # In a real-world scenario, you would fetch this from the user's profile
-    # or session
     user_email = req_data['email']
-    doc = SimpleDocTemplate(output_path, pagesize=A4,
+    doc = SimpleDocTemplate(buffer, pagesize=A4,
                             rightMargin=50, leftMargin=50,
                             topMargin=50, bottomMargin=50)
 
@@ -513,7 +516,7 @@ def generate_invoice(user_id, output_path="invoice.pdf"):
     content.append(Paragraph("<b>Thank you for shopping with us!</b>", styles["Normal"]))
 
     doc.build(content)
-    return jsonify("message")
+    return buffer.getvalue()
 
 
 @app.get('/<provider>/<branch>/<barcode_id>/get_product_by_barcode')

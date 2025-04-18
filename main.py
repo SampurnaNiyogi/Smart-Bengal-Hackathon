@@ -1,32 +1,22 @@
 import streamlit as st
 import time
+from utils import get_base64_encoded_image
 
 st.set_page_config(page_title="Cashier-Less Retail Shop", page_icon="🛒")
 
-
 st.markdown('<div class="main-content">', unsafe_allow_html=True)
 
-
+logo = get_base64_encoded_image('assets/logo.jpg')
 # Optional: Add a brand logo
-st.markdown("""
+st.markdown(f"""
 <div style="text-align: center;">
-    <img src="assets/logo.jpg" alt="Store Logo" width="120">
+    <img src='{logo}' alt="Store Logo" width="120">
 </div>
 """, unsafe_allow_html=True)
-
 
 st.image("assets/logo2.jpg", width=120)
 
 st.title("Cashier-Less Retail Shop")
-
-
-
-
-
-
-
-
-
 
 # Custom Button Styling
 st.markdown("""

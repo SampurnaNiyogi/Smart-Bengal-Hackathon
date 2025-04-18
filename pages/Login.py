@@ -1,38 +1,10 @@
-import re
 import streamlit as st
-import firebase_admin
-from firebase_admin import credentials, firestore
 import time
-from dotenv import load_dotenv
-import os
-from PIL import Image
-import base64
-import uuid
-import random
+from utils import get_base64_encoded_image
 import requests
+
 # Set page config early
 st.set_page_config(page_title="Smart Retail - Login", page_icon="🛒", layout="centered")
-
-
-
-
-
-
-
-
-# Load environment variables from .env
-load_dotenv()
-service_account_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
-
-if not service_account_path:
-    raise ValueError("GOOGLE_APPLICATION_CREDENTIALS is not set in the .env file")
-
-# Initialize Firebase only if not already initialized
-if not firebase_admin._apps:
-    cred = credentials.Certificate(service_account_path)
-    firebase_admin.initialize_app(cred)
-
-db = firestore.client()
 
 if "user_registered" not in st.session_state:
     st.session_state.user_registered = None
@@ -47,13 +19,6 @@ if "fingerprint_scan_progress" not in st.session_state:
     st.session_state.fingerprint_scan_progress = 0
 
 BASE_URL = "http://127.0.0.1:5000"
-
-# Convert image to base64 string
-def get_base64_encoded_image(image_path):
-    with open(image_path, "rb") as img_file:
-        encoded = base64.b64encode(img_file.read()).decode()
-        return f"data:image/jpeg;base64,{encoded}"
-
 
 fingerprint_base64 = get_base64_encoded_image("assets/fingerprint.png")
 
@@ -317,7 +282,7 @@ def register():
 
         else:
             st.error(f"❌ {result.get('error', 'Something went wrong')}")
-        
+
     # Back button
     if st.button("Back to Login"):
         st.session_state.user_registered = "None"
@@ -452,15 +417,16 @@ def fingerprint_auth():
             status_text.markdown("<p style='text-align: center;'>Authenticating...</p>", unsafe_allow_html=True)
 
     response = requests.get(f"{BASE_URL}/fingerprint_auth")
-    
+
     if response.status_code == 200:
-        user_details = response.json() 
+        user_details = response.json()
         st.session_state["user_name"] = user_details["user_name"]
         st.session_state["user_email"] = user_details["user_email"]
         st.session_state["fingerprint_id"] = user_details["fingerprint_id"]
 
         time.sleep(2)
-        status_text.markdown("<p style='text-align: center;'>Authentication successful!.....</p>", unsafe_allow_html=True)
+        status_text.markdown("<p style='text-align: center;'>Authentication successful!.....</p>",
+                             unsafe_allow_html=True)
         time.sleep(0.05)  # Adjust speed of scan
 
         # Success message

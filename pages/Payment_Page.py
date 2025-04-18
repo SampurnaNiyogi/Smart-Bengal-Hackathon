@@ -5,13 +5,6 @@ import streamlit as st
 
 BASE_URL = "http://127.0.0.1:5000"
 
-
-
-
-
-
-
-
 st.title("💳 Payment Gateway")
 
 if "user_name" not in st.session_state or "checkout_payload" not in st.session_state:
@@ -19,7 +12,6 @@ if "user_name" not in st.session_state or "checkout_payload" not in st.session_s
     st.stop()
 
 user_id = st.session_state["user_name"]
-
 
 # Fake UI
 st.markdown("""
@@ -57,9 +49,6 @@ st.markdown("### Choose Payment Method")
 st.radio("Select one:", ["UPI", "Credit Card", "Net Banking", "Wallets"], horizontal=True)
 
 if st.session_state.get("switch_to_home"):
-    with st.spinner("⏳ Redirecting to Cart dashboard..."):
-        time.sleep(2.5)
-    # Clear flag and switch page
     st.session_state["switch_to_cart"] = False
     st.switch_page("pages/Customer_dashboard.py")
 
@@ -71,33 +60,24 @@ if st.button("💸 Pay Now", use_container_width=True):
         # Contains email, cart details, timestamp, provider and branch
         invoice_payload = {'email': user_email, **(response.json()), **checkout_payload}
     if response.status_code == 200:
-        invoice_generate = requests.post(f'{BASE_URL}/{user_id}/generate_invoice',
-                                         json=invoice_payload)
-        if invoice_generate.status_code == 200:
-            with open("invoice.pdf", "rb") as f:
-                st.download_button(
-                    label="⬇️ Download Your Invoice",
-                    data=f,
-                    file_name="invoice.pdf",
-                    mime="application/pdf"
-                )
-        else: 
-            st.error("Error generating invoice")
-
-        invoice_send = requests.post(f"{BASE_URL}/{user_id}/send_invoice_email", json=invoice_payload)
         st.success("🎉 Payment successful! Your order has been placed.")
+        invoice_send = requests.post(f"{BASE_URL}/{user_id}/send_invoice_email", json=invoice_payload)
         if invoice_send.status_code == 200:
-            st.success(f"✅ Invoice Email Sent")
+            st.success("✅ Invoice Email Sent")
             st.toast(f"📧 Invoice sent to {user_id}'s email", icon="✅")
-        else: 
-            st.error("Error Sending Invoice Email")
+            st.toast("🛍️ You can now view your order history.", icon="📦")
+            with st.empty():
+                for secs in range(10, -1, -1):
+                    st.write(f'⏳ Redirecting in {secs} seconds...' if secs
+                             else '⌛ Redirecting to Customer dashboard...')
+                    time.sleep(1)
 
-        st.toast("🛍️ You can now view your order history.", icon="📦")
-        time.sleep(2)
-        st.session_state["switch_to_home"] = True
-        st.rerun()
+            st.session_state["switch_to_home"] = True
+            st.rerun()
+        else:
+            st.error(invoice_send.json()['error'], icon='❌')
     else:
-        st.error("❌ Payment failed.")
+        st.error(f"❌ Payment failed. Reason: {response.json()['error']}")
         st.toast("⚠️ Please try again.")
 if st.button("Cancel Payment", use_container_width=True):
     with st.spinner("Returning to Cart....."):
