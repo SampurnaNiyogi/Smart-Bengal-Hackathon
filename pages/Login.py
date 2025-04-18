@@ -15,68 +15,8 @@ st.set_page_config(page_title="Smart Retail - Login", page_icon="🛒", layout="
 
 
 
-# Custom Sidebar Styling
-st.markdown("""
-    <style>
-        [data-testid="stSidebar"] {
-            background: linear-gradient(145deg, #1f1f2f, #191926);
-            padding-top: 2rem;
-            transition: all 0.3s ease-in-out;
-        }
-        [data-testid="stSidebar"]:hover {
-            background: linear-gradient(145deg, #292940, #1f1f2f);
-        }
-        [data-testid="stSidebar"] * {
-            color: #f0f0f0 !important;
-            font-family: 'Segoe UI', sans-serif;
-        }
-        .stSelectbox > div {
-            padding: 10px 0;
-        }
-    </style>
-""", unsafe_allow_html=True)
 
-# Sidebar
-with st.sidebar:
-    page = st.selectbox("📂 Navigate to", [
-        "🏠 Main",
-        "🛒 Cart Dashboard",
-        "👥 Customer Dashboard",
-        "🔐 Login",
-        "💳 Payment Page",
-        "🔎 Search Dashboard",
-        "🗺️ Store Map"
-    ])
 
-# Route (manual redirect if all logic is in main.py)
-if page == "🏠 Main":
-    st.title("")
-elif page == "🛒 Cart Dashboard":
-    st.switch_page("pages/Cart_Dashboard.py")
-elif page == "👥 Customer Dashboard":
-    st.switch_page("pages/Customer_Dashboard.py")
-elif page == "🔐 Login":
-    st.switch_page("pages/Login.py")
-elif page == "💳 Payment Page":
-    st.switch_page("pages/Payment_page.py")
-elif page == "🔎 Search Dashboard":
-    st.switch_page("pages/Search_Dashboard.py")
-elif page == "🗺️ Store Map":
-    st.switch_page("pages/Store_map.py")
-
-# Hide default Streamlit sidebar & footer
-st.markdown("""
-    <style>
-        /* Hide top-right hamburger menu */
-        #MainMenu {visibility: hidden;}
-        
-        /* Hide footer */
-        footer {visibility: hidden;}
-        
-        /* Optional: Hide sidebar toggle completely */
-        .css-1d391kg {display: none}
-    </style>
-""", unsafe_allow_html=True)
 
 
 
