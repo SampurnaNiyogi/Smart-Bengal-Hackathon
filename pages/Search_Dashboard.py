@@ -4,8 +4,18 @@ import urllib.parse
 import cv2
 from pyzbar.pyzbar import decode, ZBarSymbol
 import time
+
+import platform
+import os
+# Only for macOS
+if platform.system() == "Darwin":
+    lib_path = "/opt/homebrew/opt/zbar/lib/libzbar.dylib"
+    if os.path.exists(lib_path):
+        ctypes.cdll.LoadLibrary(lib_path)
+    else:
+        raise FileNotFoundError(f"ZBar library not found at {lib_path}")
 import ctypes
-ctypes.cdll.LoadLibrary("/opt/homebrew/opt/zbar/lib/libzbar.dylib")
+
 # from store_map import render_store_map
 
 # # Navigation
