@@ -15,73 +15,71 @@ st.image("assets/logo2.jpg", width=120)
 
 st.title("Cashier-Less Retail Shop")
 
+
+# Hide default Streamlit sidebar & footer
 st.markdown("""
     <style>
-    /* Sidebar container */
-    [data-testid="stSidebar"] {
-        background-color: #0f1117;
-        padding-top: 2rem;
-    }
-
-    /* Nav list */
-    [data-testid="stSidebarNav"] > ul {
-        padding-left: 0;
-    }
-
-    /* Nav items */
-    [data-testid="stSidebarNav"] li {
-        list-style-type: none;
-        margin-bottom: 10px;
-        border-radius: 10px;
-        transition: all 0.3s ease;
-    }
-
-    [data-testid="stSidebarNav"] li a {
-        color: #cfcfcf;
-        font-size: 1rem;
-        padding: 0.6rem 1rem;
-        display: block;
-        text-decoration: none;
-    }
-
-    [data-testid="stSidebarNav"] li:hover {
-        background-color: #262a35;
-    }
-
-    /* Highlight for each page */
-    [data-testid="stSidebarNav"] a[href$="/🏠_Main"] {
-        background-color: #4b5563;
-        font-weight: bold;
-        color: white;
-    }
-    [data-testid="stSidebarNav"] a[href$="/🛒_Cart_Dashboard"] {
-        background-color: #4a4a70;
-        font-weight: bold;
-        color: white;
-    }
-    [data-testid="stSidebarNav"] a[href$="/👤_Customer_Dashboard"] {
-        background-color: #3f3f7d;
-        font-weight: bold;
-        color: white;
-    }
-    [data-testid="stSidebarNav"] a[href$="/🔐_Login"] {
-        background-color: #374151;
-        font-weight: bold;
-        color: white;
-    }
-    [data-testid="stSidebarNav"] a[href$="/💳_Payment_Page"] {
-        background-color: #3b3c5a;
-        font-weight: bold;
-        color: white;
-    }
-    [data-testid="stSidebarNav"] a[href$="/🔍_Search_Dashboard"] {
-        background-color: #2f3d4f;
-        font-weight: bold;
-        color: white;
-    }
+        /* Hide top-right hamburger menu */
+        #MainMenu {visibility: hidden;}
+        
+        /* Hide footer */
+        footer {visibility: hidden;}
+        
+        /* Optional: Hide sidebar toggle completely */
+        .css-1d391kg {display: none}
     </style>
 """, unsafe_allow_html=True)
 
+
+
+# Custom Sidebar Styling
+st.markdown("""
+    <style>
+        [data-testid="stSidebar"] {
+            background: linear-gradient(145deg, #1f1f2f, #191926);
+            padding-top: 2rem;
+            transition: all 0.3s ease-in-out;
+        }
+        [data-testid="stSidebar"]:hover {
+            background: linear-gradient(145deg, #292940, #1f1f2f);
+        }
+        [data-testid="stSidebar"] * {
+            color: #f0f0f0 !important;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        .stSelectbox > div {
+            padding: 10px 0;
+        }
+    </style>
+""", unsafe_allow_html=True)
+
+# Sidebar
+with st.sidebar:
+    page = st.selectbox("📂 Navigate to", [
+        "🏠 Main",
+        "🛒 Cart Dashboard",
+        "👥 Customer Dashboard",
+        "🔐 Login",
+        "💳 Payment Page",
+        "🔎 Search Dashboard",
+        "🗺️ Store Map"
+    ])
+
+# Route (manual redirect if all logic is in main.py)
+if page == "🏠 Main":
+    st.title("")
+elif page == "🛒 Cart Dashboard":
+    st.switch_page("pages/Cart_Dashboard.py")
+elif page == "👥 Customer Dashboard":
+    st.switch_page("pages/Customer_Dashboard.py")
+elif page == "🔐 Login":
+    st.switch_page("pages/Login.py")
+elif page == "💳 Payment Page":
+    st.switch_page("pages/Payment_page.py")
+elif page == "🔎 Search Dashboard":
+    st.switch_page("pages/Search_Dashboard.py")
+elif page == "🗺️ Store Map":
+    st.switch_page("pages/Store_map.py")
 
 
 # Custom Button Styling
