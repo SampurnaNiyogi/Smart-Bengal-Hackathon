@@ -340,34 +340,37 @@ if product_name:
                     st.markdown(f"**💰 Price:** `₹{product_details['price']}`")
 
                 with col2:
-                    if product_details['quantity'] == 0:
-                        st.info("Product Not Available")
-                        st.button("➕ Add to Cart", disabled=True)
+                    if "scanned_product" in st.session_state:
+                        if product_details['quantity'] == 0:
+                            st.info("Product Not Available")
+                            st.button("➕ Add to Cart", disabled=True)
+                        else:
+                            quantity = st.number_input("Quantity",
+                                                    min_value=1,
+                                                    max_value=product_details['quantity'],
+                                                    value=1,
+                                                    step=1,
+                                                    key="quantity_input")
+                            if st.button("➕ Add to Cart", use_container_width=True):
+                                user_id = st.session_state.get("user_name", "guest")
+                                add_response = requests.post(
+                                    f"{BASE_URL}/{provider}/{encoded_branch}/{user_id}/add_to_cart",
+                                    json={
+                                        "product_name": product_name.lower(),
+                                        "quantity": quantity,
+                                        "price": product_details["price"]
+                                    }
+                                )
+                                if add_response.status_code == 200:
+                                    st.success(f"✅ {product_name.title()} added to cart!")
+                                    time.sleep(1)
+                                    st.session_state.pop("scanned_product", None)
+                                    st.rerun()
+                                else:
+                                    st.error(f"❌ Failed to add: {add_response.json().get('error')}")
                     else:
-                        quantity = st.number_input("Quantity",
-                                                   min_value=1,
-                                                   max_value=product_details['quantity'],
-                                                   value=1,
-                                                   step=1,
-                                                   key="quantity_input")
-                        if st.button("➕ Add to Cart", use_container_width=True):
-                            user_id = st.session_state.get("user_name", "guest")
-                            add_response = requests.post(
-                                f"{BASE_URL}/{provider}/{encoded_branch}/{user_id}/add_to_cart",
-                                json={
-                                    "product_name": product_name.lower(),
-                                    "quantity": quantity,
-                                    "price": product_details["price"]
-                                }
-                            )
-                            if add_response.status_code == 200:
-                                st.success(f"✅ {product_name.title()} added to cart!")
-                                time.sleep(1)
-                                st.session_state.pop("scanned_product", None)
-                                st.rerun()
-                            else:
-                                st.error(f"❌ Failed to add: {add_response.json().get('error')}")
-
+                        st.warning("Scan Product first to add to cart")
+                        st.rerun()
         elif response.status_code == 400:
             st.markdown("""
             <div class="error-message">
