@@ -7,6 +7,7 @@ import time
 
 import platform
 import os
+import ctypes
 # Only for macOS
 if platform.system() == "Darwin":
     lib_path = "/opt/homebrew/opt/zbar/lib/libzbar.dylib"
@@ -14,7 +15,7 @@ if platform.system() == "Darwin":
         ctypes.cdll.LoadLibrary(lib_path)
     else:
         raise FileNotFoundError(f"ZBar library not found at {lib_path}")
-import ctypes
+
 
 # from store_map import render_store_map
 
