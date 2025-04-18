@@ -215,6 +215,8 @@ def scan_barcode_streamlit():
 
     cap.release()
     cv2.destroyAllWindows()
+    FRAME_WINDOW.empty()
+
     st.session_state["cancel_scan"] = False
     status_placeholder.empty()
     return scanned_id
