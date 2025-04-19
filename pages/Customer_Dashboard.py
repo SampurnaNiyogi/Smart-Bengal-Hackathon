@@ -1,5 +1,6 @@
 import streamlit as st
 import requests
+from utils import load_css
 
 
 # Custom Sidebar Styling
@@ -7,105 +8,29 @@ import requests
 # Hide default Streamlit sidebar & footer
 
 # Inject custom CSS to hide Streamlit's default UI
-
-
-
-
-
 # Custom CSS for enhanced styling
-st.markdown("""
-<style>
-    .main-header {
-        font-size: 2.5rem;
-        color: #F2EFE7;
-        text-align: center;
-        margin-bottom: 2rem;
-        background: linear-gradient(90deg, #3498db, #006A71);
-        color: white;
-        padding: 1rem;
-        border-radius: 10px;
-    }
-    
-    .welcome-message {
-        font-size: 1.5rem;
-        font-weight: 500;
-        margin-bottom: 2rem;
-        color: #7AC6D2
-    }
-    
-    .selection-container {
-        background-color: transparent;
-        padding: 1.5rem;
-        border-radius: 0px;
-        box-shadow: 0 0px 0px rgba(0, 0, 0, 0);
-        margin-bottom: 2rem;
-        height: 0px
-    }
-    
-    .selection-header {
-        font-size: 0rem;
-        font-weight: 0;
-        margin-bottom: 0;
-        color: #2c3e50;
-    }
-    
-    .selection-result {
-        background-color: transparent;
-        padding: 0.8rem;
-        border-radius: 5px;
-        margin-top: 0.5rem;
-        border-left: 4px solid #3498db;
-    }
-    
-    .action-buttons {
-        display: flex;
-        gap: 1rem;
-        margin-top: 2rem;
-    }
-    
-    .stButton>button {
-        background-color: #3674B5;
-        color: white;
-        border: none;
-        padding: 0.5rem 1rem;
-        border-radius: 5px;
-        font-weight: 500;
-        width: 100%;
-        transition: all 0.3s ease;
-    }
-    
-    .stButton>button:hover {
-        background-color: #2980b9;
-        color: #E8C999 !important;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    }
-    
-    .cart-button button {
-        background-color: #27ae60 !important;
-    }
-    
-    .cart-button button:hover {
-        background-color: #219653 !important;
-        color: #D1F8EF
-    }
-    
-    .st-selectbox {
-        border-radius: 5px;
-    }
-</style>
-""", unsafe_allow_html=True)
+@st.cache_data
+def load_customer_css(filename='customer-dashboard.css'):
+    css = load_css(filename)
+    return f"<style>{css}</style>"
 
-BASE_URL = "http://127.0.0.1:5000"
 
 if "user_name" in st.session_state:
     name = st.session_state['user_name']
+else:
+    st.error('For the love of god please register/login to view this page', icon=':material/error:')
+    st.stop()
 
 if "retail" not in st.session_state:
     st.session_state.retail = False
 
 if "branch" not in st.session_state:
     st.session_state.branch = False
+
+customer_css = load_customer_css()
+st.markdown(customer_css, unsafe_allow_html=True)
+
+BASE_URL = "http://127.0.0.1:5000"
 
 # Main header
 st.markdown(f'<div class="main-header">Smart Cashier-less Retail System</div>', unsafe_allow_html=True)

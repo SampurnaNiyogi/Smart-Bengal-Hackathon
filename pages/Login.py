@@ -1,10 +1,28 @@
 import streamlit as st
 import time
-from utils import get_base64_encoded_image
+from utils import *
 import requests
 
 # Set page config early
 st.set_page_config(page_title="Smart Retail - Login", page_icon="🛒", layout="centered")
+# Shopping Cart SVG Animation
+loading_svg = """
+<div style="display: flex; justify-content: center; align-items: center; height: 150px;">
+    <svg width="80" height="80" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <g>
+            <circle cx="9" cy="20" r="1.5" fill="#3498db">
+                <animate attributeName="r" values="1.5;2;1.5" dur="0.6s" repeatCount="indefinite"/>
+            </circle>
+            <circle cx="17" cy="20" r="1.5" fill="#3498db">
+                <animate attributeName="r" values="1.5;2;1.5" dur="0.6s" repeatCount="indefinite"/>
+            </circle>
+            <path d="M4 4H6L9 15H17L20 8H8" stroke="#3498db" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <animateTransform attributeName="transform" type="translate" values="0 0; 1 -1; 0 0" dur="0.6s" repeatCount="indefinite"/>
+            </path>
+        </g>
+    </svg>
+</div>
+"""
 
 if "user_registered" not in st.session_state:
     st.session_state.user_registered = None
@@ -23,154 +41,18 @@ BASE_URL = "http://127.0.0.1:5000"
 fingerprint_base64 = get_base64_encoded_image("assets/fingerprint.png")
 
 
+@st.cache_data
+def load_login_css(filename='login-page.css'):
+    css = load_css(filename)
+    return f"<style>{css}</style>"
+
+
+login_css = load_login_css()
+
+
 # Apply custom CSS
 def apply_custom_css():
-    # Shopping Cart SVG Animation
-    loading_svg = """
-    <div style="display: flex; justify-content: center; align-items: center; height: 150px;">
-        <svg width="80" height="80" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <g>
-                <circle cx="9" cy="20" r="1.5" fill="#3498db">
-                    <animate attributeName="r" values="1.5;2;1.5" dur="0.6s" repeatCount="indefinite"/>
-                </circle>
-                <circle cx="17" cy="20" r="1.5" fill="#3498db">
-                    <animate attributeName="r" values="1.5;2;1.5" dur="0.6s" repeatCount="indefinite"/>
-                </circle>
-                <path d="M4 4H6L9 15H17L20 8H8" stroke="#3498db" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <animateTransform attributeName="transform" type="translate" values="0 0; 1 -1; 0 0" dur="0.6s" repeatCount="indefinite"/>
-                </path>
-            </g>
-        </svg>
-    </div>
-    """
-    st.markdown("""
-    <style>
-        :root {
-            --primary-color: #3498db;
-            --secondary-color: #2ecc71;
-            --accent-color: #f39c12;
-            --background-color: #f5f7fa;
-            --text-color: #2c3e50;
-            --card-bg: #ffffff;
-            --error-color: #e74c3c;
-            --success-color: #27ae60;
-        }
-
-        .stButton > button {
-            background-color: var(--primary-color);
-            color: white;
-            border-radius: 8px;
-            border: none;
-            padding: 12px 20px;
-            font-weight: 500;
-            width: 100%;
-            transition: all 0.3s ease;
-        }
-        .stButton > button:hover {
-            background-color: #2980b9;
-            color: #E8C999 !important;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-        .stTextInput > div > div > input {
-            border-radius: 8px;
-            padding: 12px 15px;
-            border: 1px solid #dfe6e9;
-            font-size: 16px;
-        }
-        .stTextInput > div > div > input:focus {
-            border-color: var(--primary-color);
-            box-shadow: none;
-        }
-        .logo-header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        .logo-icon {
-            font-size: 50px;
-            color: var(--primary-color);
-        }
-        h1, h2, h3 {
-            color: var(--primary-color);
-        }
-        .subtitle {
-            color: #7f8c8d;
-            font-size: 16px;
-        }
-        .divider {
-            display: flex;
-            align-items: center;
-            margin: 20px 0;
-            color: #7f8c8d;
-        }
-        .divider::before, .divider::after {
-            content: "";
-            flex: 1;
-            border-bottom: 1px solid #dfe6e9;
-        }
-        .divider span {
-            padding: 0 10px;
-            font-size: 14px;
-        }
-        .fingerprint-button {
-            border: none;
-            background: none;
-            padding: 0;
-            cursor: pointer;
-            display: flex;
-            justify-content: center;
-        }
-        .fingerprint-img {
-            width: 160px;
-            height: 130px;
-            border-radius: 50%;
-            transition: transform 0.3s ease;
-            cursor: pointer;
-        }
-        .fingerprint-img:hover {
-            transform: scale(1.05);
-        }
-        .centered-text {
-            text-align: center;
-            font-size: 1.2rem;
-            margin-top: 1rem;
-            color: #333;
-        }
-        
-        /* Fingerprint scan animation */
-        .scan-line {
-            height: 5px;
-            background: linear-gradient(to right, transparent, #3498db, transparent);
-            position: absolute;
-            width: 100%;
-            animation: scan 2s ease-in-out infinite;
-        }
-        @keyframes scan {
-            0% { top: 0; }
-            50% { top: 100%; }
-            100% { top: 0; }
-        }
-        .fingerprint-container {
-            position: relative;
-            width: 200px;
-            height: 200px;
-            margin: 0 auto;
-            border-radius: 10px;
-            overflow: hidden;
-        }
-        .fingerprint-scan {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-        }
-        .center-wrapper {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin: 2rem 0;
-        }
-    </style>
-    """, unsafe_allow_html=True)
+    st.markdown(login_css, unsafe_allow_html=True)
 
 
 def login_page():
@@ -321,24 +203,6 @@ def authenticate() -> None:
             status_text = st.empty()
             status_text.markdown("<h3 style='text-align: center;'>Entering Store.....</h3>", unsafe_allow_html=True)
 
-            # Shopping Cart SVG Animation
-            loading_svg = """
-            <div style="display: flex; justify-content: center; align-items: center; height: 150px;">
-                <svg width="80" height="80" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <g>
-                        <circle cx="9" cy="20" r="1.5" fill="#3498db">
-                            <animate attributeName="r" values="1.5;2;1.5" dur="0.6s" repeatCount="indefinite"/>
-                        </circle>
-                        <circle cx="17" cy="20" r="1.5" fill="#3498db">
-                            <animate attributeName="r" values="1.5;2;1.5" dur="0.6s" repeatCount="indefinite"/>
-                        </circle>
-                        <path d="M4 4H6L9 15H17L20 8H8" stroke="#3498db" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <animateTransform attributeName="transform" type="translate" values="0 0; 1 -1; 0 0" dur="0.6s" repeatCount="indefinite"/>
-                        </path>
-                    </g>
-                </svg>
-            </div>
-            """
 
             loading_placeholder = st.empty()
             loading_placeholder.markdown(loading_svg, unsafe_allow_html=True)
@@ -356,24 +220,6 @@ def authenticate() -> None:
 
 def fingerprint_auth():
     apply_custom_css()
-    # Shopping Cart SVG Animation
-    loading_svg = """
-    <div style="display: flex; justify-content: center; align-items: center; height: 150px;">
-        <svg width="80" height="80" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <g>
-                <circle cx="9" cy="20" r="1.5" fill="#3498db">
-                    <animate attributeName="r" values="1.5;2;1.5" dur="0.6s" repeatCount="indefinite"/>
-                </circle>
-                <circle cx="17" cy="20" r="1.5" fill="#3498db">
-                    <animate attributeName="r" values="1.5;2;1.5" dur="0.6s" repeatCount="indefinite"/>
-                </circle>
-                <path d="M4 4H6L9 15H17L20 8H8" stroke="#3498db" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <animateTransform attributeName="transform" type="translate" values="0 0; 1 -1; 0 0" dur="0.6s" repeatCount="indefinite"/>
-                </path>
-            </g>
-        </svg>
-    </div>
-    """
     # Logo and header
     st.markdown("""
     <div class="logo-header">

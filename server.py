@@ -1,4 +1,3 @@
-import base64
 import os
 import random
 import re
@@ -7,18 +6,17 @@ import uuid
 from datetime import datetime
 from email.message import EmailMessage
 from io import BytesIO
+from urllib.parse import unquote
 
 import firebase_admin
 from dotenv import load_dotenv
 from firebase_admin import credentials, firestore
-from flask import Flask, request, jsonify, Response
+from flask import Flask, request, jsonify
 from reportlab.lib import colors
+from reportlab.lib.enums import TA_CENTER
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import Table, TableStyle, SimpleDocTemplate, Paragraph, Spacer
-from reportlab.lib.enums import TA_CENTER
-
-from urllib.parse import unquote
 
 # Load environment variables from .env
 load_dotenv()
@@ -102,7 +100,7 @@ def add_user():
         return jsonify({"success": False, "error": str(e)}), 500
 
 
-@app.route('/login_user', methods=['POST'])
+@app.post('/login_user')
 def login_user():
     data = request.get_json()  # Get data from request
 

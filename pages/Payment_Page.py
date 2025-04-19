@@ -2,6 +2,7 @@ import time
 
 import requests
 import streamlit as st
+from utils import load_css
 
 BASE_URL = "http://127.0.0.1:5000"
 
@@ -11,28 +12,18 @@ if "user_name" not in st.session_state or "checkout_payload" not in st.session_s
     st.warning("You have not initiated a checkout.")
     st.stop()
 
+@st.cache_data
+def load_payment_css(filename='payment-page.css'):
+    css = load_css(filename)
+    return f'<style>{css}</style>'
+
+
+payment_css = load_payment_css()
 user_id = st.session_state["user_name"]
 
 # Fake UI
+st.markdown(payment_css, unsafe_allow_html=True)
 st.markdown("""
-<style>
-.payment-box {
-    padding: 1.5rem;
-    background-color: #2E5077;
-    border-radius: 10px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    margin: 2rem 0;
-    text-align: center;
-}
-.pay-button {
-    background-color: #27ae60;
-    color: white;
-    padding: 0.8rem 1.5rem;
-    font-size: 1.2rem;
-    border-radius: 8px;
-    border: none;
-}
-</style>
 <div class="payment-box">
     <h3>Choose Payment Method</h3>
     <p>UPI | Card | Wallet | NetBanking</p>
@@ -67,7 +58,7 @@ if st.button("💸 Pay Now", use_container_width=True):
             st.toast(f"📧 Invoice sent to {user_id}'s email", icon="✅")
             st.toast("🛍️ You can now view your order history.", icon="📦")
             with st.empty():
-                for secs in range(10, -1, -1):
+                for secs in range(5, 0, -1):
                     st.write(f'⏳ Redirecting in {secs} seconds...' if secs
                              else '⌛ Redirecting to Customer dashboard...')
                     time.sleep(1)

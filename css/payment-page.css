@@ -1,0 +1,17 @@
+.payment-box {
+    padding: 1.5rem;
+    background-color: #2E5077;
+    color: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    margin: 2rem 0;
+    text-align: center;
+}
+.pay-button {
+    background-color: #27ae60;
+    color: white;
+    padding: 0.8rem 1.5rem;
+    font-size: 1.2rem;
+    border-radius: 8px;
+    border: none;
+}
