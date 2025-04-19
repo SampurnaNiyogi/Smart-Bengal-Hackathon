@@ -4,7 +4,7 @@ from pathlib import Path
 
 def get_base64_encoded_image(image_path: str) -> str:
     """
-    Convert image to base64 string
+    Converts image to base64 string. This enables loading images in HTML in a Streamlit application
     :param image_path: The path to the image file
     :return: The image converted to base64 string
     """
@@ -15,9 +15,19 @@ def get_base64_encoded_image(image_path: str) -> str:
 
 def load_css(css_filename: str) -> str:
     """
-    Reads css from a .css file
-    :param css_filename: The path to the css
-    :return: The contents of the file
+    Reads CSS from a .css file
+    :param css_filename: The name of the CSS file
+    :return: The contents of the CSS file
     """
     css_pathobj = Path('.') / 'css' / css_filename
     return css_pathobj.read_text()
+
+
+def load_svg(filename: str) -> str:
+    """
+    Loads SVG from a .svg file
+    :param filename: The name of the SVG
+    :return: The contents of the SVG
+    """
+    nice = Path('.') / 'assets' / filename
+    return nice.read_text()

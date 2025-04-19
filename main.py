@@ -1,8 +1,15 @@
-import streamlit as st
 import time
-from utils import get_base64_encoded_image
+import streamlit as st
+from utils import get_base64_encoded_image, load_svg
 
 st.set_page_config(page_title="Cashier-Less Retail Shop", page_icon="🛒")
+
+# Shopping Cart SVG Animation
+loading_svg = f"""
+<div style="display: flex; justify-content: center; align-items: center; height: 150px;">
+    {load_svg('cart-loading.svg')}
+</div>
+"""
 
 st.markdown('<div class="main-content">', unsafe_allow_html=True)
 
@@ -42,24 +49,7 @@ st.markdown("""
 status_text = st.empty()
 status_text.markdown("<h3 style='text-align: center;'>Initializing...</h3>", unsafe_allow_html=True)
 
-# Shopping Cart SVG Animation
-loading_svg = """
-<div style="display: flex; justify-content: center; align-items: center; height: 150px;">
-    <svg width="80" height="80" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <g>
-            <circle cx="9" cy="20" r="1.5" fill="#3498db">
-                <animate attributeName="r" values="1.5;2;1.5" dur="0.6s" repeatCount="indefinite"/>
-            </circle>
-            <circle cx="17" cy="20" r="1.5" fill="#3498db">
-                <animate attributeName="r" values="1.5;2;1.5" dur="0.6s" repeatCount="indefinite"/>
-            </circle>
-            <path d="M4 4H6L9 15H17L20 8H8" stroke="#3498db" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <animateTransform attributeName="transform" type="translate" values="0 0; 1 -1; 0 0" dur="0.6s" repeatCount="indefinite"/>
-            </path>
-        </g>
-    </svg>
-</div>
-"""
+
 
 loading_placeholder = st.empty()
 loading_placeholder.markdown(loading_svg, unsafe_allow_html=True)

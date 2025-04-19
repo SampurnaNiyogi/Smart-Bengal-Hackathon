@@ -1,5 +1,4 @@
 import time
-
 import requests
 import streamlit as st
 from utils import load_css
