@@ -7,3 +7,5 @@ python-dotenv
 reportlab
 opencv-python
 pyzbar
+folium
+streamlit-folium
