@@ -1,9 +1,6 @@
-import streamlit as st
 import folium
-from streamlit_folium import folium_static
-
-
-
+import streamlit as st
+from streamlit_folium import st_folium
 
 # Custom Sidebar Styling
 
@@ -12,13 +9,12 @@ from streamlit_folium import folium_static
 # Inject custom CSS to hide Streamlit's default UI
 
 
-
-
 st.set_page_config(layout="wide")
 st.title("🗺️ Interactive Store Map with Folium")
 
 # Define map center and zoom
 m = folium.Map(location=[0, 0], zoom_start=17, width='100%', height='100%')
+
 
 # Helper to add store section blocks (rectangles)
 def add_section(map_obj, name, top_left, bottom_right, color, items):
@@ -29,6 +25,7 @@ def add_section(map_obj, name, top_left, bottom_right, color, items):
         fill_opacity=0.6,
         popup=folium.Popup(f"<b>{name}</b><br>" + "<br>".join(items), max_width=200)
     ).add_to(map_obj)
+
 
 # Define layout blocks with fake lat/long (since it's indoor, just schematic values)
 store_sections = [
@@ -58,4 +55,4 @@ for start, end in paths:
     folium.PolyLine([start, end], color="gray", dash_array='5').add_to(m)
 
 # Display the Folium map
-folium_static(m, width=1000, height=700)
+st_folium(m, width=1000, height=700)

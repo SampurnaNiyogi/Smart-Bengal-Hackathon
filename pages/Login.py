@@ -191,7 +191,6 @@ def authenticate() -> None:
             status_text = st.empty()
             status_text.markdown("<h3 style='text-align: center;'>Entering Store.....</h3>", unsafe_allow_html=True)
 
-
             loading_placeholder = st.empty()
             loading_placeholder.markdown(loading_svg, unsafe_allow_html=True)
             time.sleep(2)
