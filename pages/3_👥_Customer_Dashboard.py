@@ -77,9 +77,9 @@ st.markdown('</div>', unsafe_allow_html=True)
 col1, col2 = st.columns(2)
 with col1:
     if st.button("🔍 Search Products"):
-        st.switch_page("pages/Search_dashboard.py")
+        st.switch_page("pages/4_🔎_Search_Dashboard.py")
 
 with col2:
     if st.button("🛒 View Cart"):
-        st.switch_page("pages/Cart_dashboard.py")
+        st.switch_page("pages/5_🛒_Cart_Dashboard")
     st.markdown('</div>', unsafe_allow_html=True)

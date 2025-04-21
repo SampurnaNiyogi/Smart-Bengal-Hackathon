@@ -107,11 +107,11 @@ if response.status_code == 200:
             "provider": st.session_state["retail"],
             "branch": st.session_state["branch"]
             }
-            st.switch_page("pages/Payment_page.py")    
+            st.switch_page("pages/6_💳_Payment_Page.py")    
             st.rerun()
         
           
 else:
     st.error("❌ Failed to fetch cart.")
 if st.button("Return to Search 🔍"):
-    st.switch_page("pages/Search_dashboard.py")
+    st.switch_page("pages/4_🔎_Search_Dashboard.py")

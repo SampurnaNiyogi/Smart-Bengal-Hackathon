@@ -48,7 +48,7 @@ def vertical_navbar():
     <div class="sidebar-custom">
         <a href="/">🏠 Main</a>
         <a href="/Cart_Dashboard">🛒 Cart Dashboard</a>
-        <a href="/Customer_Dashboard">👥 Customer Dashboard</a>
+        <a href="/3_👥_Customer_Dashboard">👥 Customer Dashboard</a>
         <a href="/Login">🔐 Login</a>
         <a href="/Payment_page">💳 Payment Page</a>
         <a href="/Search_Dashboard">🔎 Search Dashboard</a>

@@ -194,7 +194,7 @@ def authenticate() -> None:
             loading_placeholder = st.empty()
             loading_placeholder.markdown(loading_svg, unsafe_allow_html=True)
             time.sleep(2)
-            st.switch_page("pages/Customer_dashboard.py")
+            st.switch_page("pages/3_👥_Customer_Dashboard.py")
         else:
             st.error(result.get("error"))
     # Back button
@@ -286,7 +286,7 @@ def fingerprint_auth():
         status_text.empty()
 
         # Redirect to dashboard
-        st.switch_page("pages/Customer_dashboard.py")
+        st.switch_page("pages/3_👥_Customer_Dashboard.py")
         # Back button (will only show if redirect fails)
         if st.button("Back to Login"):
             st.session_state.fingerprint = False

@@ -41,7 +41,7 @@ st.radio("Select one:", ["UPI", "Credit Card", "Net Banking", "Wallets"], horizo
 
 if st.session_state.get("switch_to_home"):
     st.session_state["switch_to_cart"] = False
-    st.switch_page("pages/Customer_dashboard.py")
+    st.switch_page("pages/3_👥_Customer_Dashboard.py")
 
 if st.button("💸 Pay Now", use_container_width=True):
     with st.spinner("Processing Payment..."):
@@ -73,4 +73,4 @@ if st.button("💸 Pay Now", use_container_width=True):
 if st.button("Cancel Payment", use_container_width=True):
     with st.spinner("Returning to Cart....."):
         time.sleep(4)
-    st.switch_page("pages/Cart_dashboard.py")
+    st.switch_page("pages/5_🛒_Cart_Dashboard")
