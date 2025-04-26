@@ -28,14 +28,7 @@ BASE_URL = "http://127.0.0.1:5000"
 
 fingerprint_base64 = get_base64_encoded_image("assets/fingerprint.png")
 
-
-@st.cache_data
-def load_login_css(filename='login-page.css'):
-    css = load_css(filename)
-    return f"<style>{css}</style>"
-
-
-login_css = load_login_css()
+login_css = load_css('login-page.css')
 
 
 # Apply custom CSS
@@ -74,7 +67,7 @@ def login_page():
             st.rerun()
 
     # Divider and biometric options
-    st.markdown("""<div class="divider"><span>or continue with</span></div>""", unsafe_allow_html=True)
+    st.markdown('<div class="divider"><span>or continue with</span></div>', unsafe_allow_html=True)
 
     # Make the fingerprint image clickable
     col = st.columns([1, 2, 1])[1]  # Centered column

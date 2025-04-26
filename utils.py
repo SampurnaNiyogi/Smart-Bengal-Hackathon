@@ -1,3 +1,4 @@
+from streamlit import cache_data
 import base64
 from pathlib import Path
 
@@ -13,16 +14,19 @@ def get_base64_encoded_image(image_path: str) -> str:
         return f"data:image/jpeg;base64,{encoded}"
 
 
+@cache_data
 def load_css(css_filename: str) -> str:
     """
     Reads CSS from a .css file
     :param css_filename: The name of the CSS file
-    :return: The contents of the CSS file
+    :return: HTML tag with the contents of the CSS file
     """
     css_pathobj = Path('.') / 'css' / css_filename
-    return css_pathobj.read_text()
+    css = css_pathobj.read_text()
+    return f'<style>{css}</style>'
 
 
+@cache_data
 def load_svg(filename: str) -> str:
     """
     Loads SVG from a .svg file

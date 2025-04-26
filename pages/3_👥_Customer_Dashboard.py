@@ -37,6 +37,21 @@ st.markdown(f'<div class="main-header">Smart Cashier-less Retail System</div>', 
 st.markdown(f'<div class="welcome-message">Hi {name}! Welcome to our smart shopping experience.</div>',
             unsafe_allow_html=True)
 
+prov_head = st.empty()
+prov_select = st.empty()
+branch_select = st.empty()
+col1, col2 = st.columns(2)
+
+# Action buttons
+with col1:
+    if st.button("🔍 Search Products"):
+        st.switch_page("pages/4_🔎_Search_Dashboard.py")
+
+with col2:
+    if st.button("🛒 View Cart"):
+        st.switch_page("pages/5_🛒_Cart_Dashboard")
+#    st.markdown('</div>', unsafe_allow_html=True)
+
 # Fetch retailers
 response = requests.get(f"{BASE_URL}/get_providers")
 if response.status_code == 200:
@@ -46,9 +61,9 @@ else:
 
 # Retailer selection section
 # st.markdown('<div class="selection-container">', unsafe_allow_html=True)
-st.markdown('<div class="selection-header">Select Your Retailer</div>', unsafe_allow_html=True)
+prov_head.markdown('<div class="selection-header">Select Your Retailer</div>', unsafe_allow_html=True)
 
-retailer_option = st.selectbox("Select retailer:", provider_options)
+retailer_option = prov_select.selectbox("Select retailer:", provider_options)
 st.session_state.retail = retailer_option
 
 # Fetch branches dynamically based on selected provider
@@ -65,21 +80,10 @@ if retailer_option and retailer_option != "Error fetching providers":
 
     st.markdown('<div class="selection-header" style="margin-top: 1rem;">Select Branch Location</div>',
                 unsafe_allow_html=True)
-    selected_branch = st.selectbox("Choose a Branch:", branch_options, label_visibility="collapsed")
+    selected_branch = branch_select.selectbox("Choose a Branch:", branch_options, label_visibility="collapsed")
     st.session_state.branch = selected_branch
 
     # if selected_branch:
     # st.markdown(f'<div class="selection-result">Selected branch: {selected_branch}</div>', unsafe_allow_html=True)
 
 st.markdown('</div>', unsafe_allow_html=True)
-
-# Action buttons
-col1, col2 = st.columns(2)
-with col1:
-    if st.button("🔍 Search Products"):
-        st.switch_page("pages/4_🔎_Search_Dashboard.py")
-
-with col2:
-    if st.button("🛒 View Cart"):
-        st.switch_page("pages/5_🛒_Cart_Dashboard")
-    st.markdown('</div>', unsafe_allow_html=True)

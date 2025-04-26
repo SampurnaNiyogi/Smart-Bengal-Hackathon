@@ -3,15 +3,9 @@ import requests
 import time
 import urllib.parse
 
-
-
-
-
 # Hide default Streamlit sidebar & footer
 
 # Inject custom CSS to hide Streamlit's default UI
-
-
 
 
 BASE_URL = "http://127.0.0.1:5000"
@@ -43,7 +37,7 @@ response = requests.get(f"{BASE_URL}/{user_id}/get_cart")
 
 if response.status_code == 200:
     cart = response.json()
-    
+
     if not cart:
         st.info("🛍️ Your cart is currently empty.")
     else:
@@ -77,7 +71,8 @@ if response.status_code == 200:
                         if st.button(f"Update {product}", key=f"btn_{product}"):
                             update = requests.post(
                                 f"{BASE_URL}/{user_id}/update_cart_item",
-                                json={"provider": provider, "branch": encoded_branch, "product_details":{"product_name": product, "quantity": new_qty}}
+                                json={"provider": provider, "branch": encoded_branch,
+                                      "product_details": {"product_name": product, "quantity": new_qty}}
                             )
                             if update.status_code == 200:
                                 st.success(f"✅ {product.title()} updated successfully!")
@@ -85,7 +80,7 @@ if response.status_code == 200:
                                 st.rerun()
                             else:
                                 st.error("❌ Failed to update cart.")
-                    
+
                 with col2:
                     item_total = new_qty * details['price']
                     st.markdown(f"### ₹{item_total:.2f}")
@@ -104,13 +99,13 @@ if response.status_code == 200:
                 "branch": st.session_state.get("branch", "")
             }
             st.session_state["checkout_payload"] = {
-            "provider": st.session_state["retail"],
-            "branch": st.session_state["branch"]
+                "provider": st.session_state["retail"],
+                "branch": st.session_state["branch"]
             }
-            st.switch_page("pages/6_💳_Payment_Page.py")    
+            st.switch_page("pages/6_💳_Payment_Page.py")
             st.rerun()
-        
-          
+
+
 else:
     st.error("❌ Failed to fetch cart.")
 if st.button("Return to Search 🔍"):

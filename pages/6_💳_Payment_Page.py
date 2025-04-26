@@ -12,13 +12,7 @@ if "user_name" not in st.session_state or "checkout_payload" not in st.session_s
     st.stop()
 
 
-@st.cache_data
-def load_payment_css(filename='payment-page.css'):
-    css = load_css(filename)
-    return f'<style>{css}</style>'
-
-
-payment_css = load_payment_css()
+payment_css = load_css('payment-page.css')
 user_id = st.session_state["user_name"]
 
 # Fake UI

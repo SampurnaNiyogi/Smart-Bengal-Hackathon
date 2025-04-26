@@ -18,7 +18,6 @@ if platform.system() == "Darwin":
     else:
         raise FileNotFoundError(f"ZBar library not found at {lib_path}")
 
-
 # from store_map import render_store_map
 
 # # Navigation
@@ -30,15 +29,8 @@ if 'retail' not in st.session_state or not st.session_state['retail']:
     st.error("Please login/register to view the search dashboard", icon=':material/error:')
     st.stop()
 
-
 # Inject custom CSS to hide Streamlit's default UI
-@st.cache_data
-def inject_search_css(filename='search-dashboard.css'):
-    css = load_css(filename)
-    return f"<style>{css}</style>"
-
-
-search_css = inject_search_css()
+search_css = load_css('search-dashboard.css')
 st.markdown(search_css, unsafe_allow_html=True)
 
 BASE_URL = "http://127.0.0.1:5000"
@@ -215,7 +207,7 @@ if product_name:
 col1, col2 = st.columns([2, 1])
 with col1:
     if st.button("⬅️ Back to Home"):
-        st.switch_page("pages/5_🛒_Cart_Dashboard.py")
+        st.switch_page("pages/3_👥_Dashboard.py")
 with col2:
     if st.button("🛒 View Cart"):
-        st.switch_page("pages/5_🛒_Cart_Dashboard")
+        st.switch_page("pages/5_🛒_Cart_Dashboard.py")
