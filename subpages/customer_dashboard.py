@@ -45,11 +45,11 @@ col1, col2 = st.columns(2)
 # Action buttons
 with col1:
     if st.button("🔍 Search Products"):
-        st.switch_page("pages/4_🔎_Search_Dashboard.py")
+        st.switch_page("subpages/search_dashboard.py")
 
 with col2:
     if st.button("🛒 View Cart"):
-        st.switch_page("pages/5_🛒_Cart_Dashboard")
+        st.switch_page("subpages/5_🛒_Cart_Dashboard")
 #    st.markdown('</div>', unsafe_allow_html=True)
 
 # Fetch retailers

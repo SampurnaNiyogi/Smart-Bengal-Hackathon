@@ -1,8 +1,9 @@
 import time
 import streamlit as st
 from utils import get_base64_encoded_image, load_svg
+import pg_director as kekw
 
-st.set_page_config(page_title="Cashier-Less Retail Shop", page_icon="🛒")
+# st.set_page_config(page_title="Cashier-Less Retail Shop", page_icon="🛒")
 
 # Shopping Cart SVG Animation
 loading_svg = f"""
@@ -69,8 +70,9 @@ st.markdown(
     unsafe_allow_html=True)
 time.sleep(1)
 
+
 # Ensure the button appears correctly
 col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
     if st.button("Enjoy Shopping", use_container_width=True):
-        st.switch_page("pages/2_🔐_Login.py")
+        st.switch_page("subpages/login.py")

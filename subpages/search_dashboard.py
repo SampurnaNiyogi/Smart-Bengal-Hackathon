@@ -207,7 +207,7 @@ if product_name:
 col1, col2 = st.columns([2, 1])
 with col1:
     if st.button("⬅️ Back to Home"):
-        st.switch_page("pages/3_👥_Dashboard.py")
+        st.switch_page("subpages/3_👥_Dashboard.py")
 with col2:
     if st.button("🛒 View Cart"):
-        st.switch_page("pages/5_🛒_Cart_Dashboard.py")
+        st.switch_page("subpages/cart_dashboard.py")
